@@ -149,7 +149,10 @@ def resolve(url):
 
 
 def _regex(url):
-    match = re.search(r'hqq\.tv/player/embed_player\.php\?vid=(?P<vid>[0-9A-Z]+)', url)
+    match = re.search("(hqq|netu)\.tv/watch_video\.php\?v=(?P<vid>[0-9A-Z]+)", url)
+    if match:
+        return match
+    match = re.search(r'(hqq|netu)\.tv/player/embed_player\.php\?vid=(?P<vid>[0-9A-Z]+)', url)
     if match:
         return match
     b64enc = re.search(r'data:text/javascript\;charset\=utf\-8\;base64([^\"]+)', url)
@@ -159,6 +162,6 @@ def _regex(url):
         decoded = _decode(enc)
         print decoded
         match = re.search(r'<input name="vid"[^>]+? value="(?P<vid>[^"]+?)">', decoded)
-        if re.search(r'<form(.+?)action="[^"]*hqq\.tv/player/embed_player\.php"[^>]*>', decoded) and match:
+        if re.search(r'<form(.+?)action="[^"]*(hqq|netu)\.tv/player/embed_player\.php"[^>]*>', decoded) and match:
             return match
     return None
