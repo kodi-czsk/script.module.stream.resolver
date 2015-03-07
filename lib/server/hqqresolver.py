@@ -160,7 +160,6 @@ def _regex(url):
     enc = b64dec and re.search(r"\'([^']+)\'", b64dec).group(1)
     if enc:
         decoded = _decode(enc)
-        print decoded
         match = re.search(r'<input name="vid"[^>]+? value="(?P<vid>[^"]+?)">', decoded)
         if re.search(r'<form(.+?)action="[^"]*(hqq|netu)\.tv/player/embed_player\.php"[^>]*>', decoded) and match:
             return match
