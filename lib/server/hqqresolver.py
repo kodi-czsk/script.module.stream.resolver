@@ -149,11 +149,16 @@ def resolve(url):
 
 
 def _regex(url):
-    m2 = None
-    m1 = re.search('hqq\.tv/player/embed_player\.php\?vid=(?P<vid>[0-9A-Z]+)', url)
-    b64enc = re.search('data:text/javascript\;charset\=utf\-8\;base64([^\"]+)', url)
+    match = re.search(r'hqq\.tv/player/embed_player\.php\?vid=(?P<vid>[0-9A-Z]+)', url)
+    if match:
+        return match
+    b64enc = re.search(r'data:text/javascript\;charset\=utf\-8\;base64([^\"]+)', url)
     b64dec = b64enc and base64.decodestring(b64enc.group(1))
-    enc = b64dec and re.search("\'([^']+)\'", b64dec).group(1)
+    enc = b64dec and re.search(r"\'([^']+)\'", b64dec).group(1)
     if enc:
-        m2 = re.search('<input name="vid"[^>]+? value="(?P<vid>[^"]+?)">', _decode(enc))
-    return m1 or m2
+        decoded = _decode(enc)
+        print decoded
+        match = re.search(r'<input name="vid"[^>]+? value="(?P<vid>[^"]+?)">', decoded)
+        if re.search(r'<form(.+?)action="[^"]*hqq\.tv/player/embed_player\.php"[^>]*>', decoded) and match:
+            return match
+    return None
