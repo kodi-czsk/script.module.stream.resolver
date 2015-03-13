@@ -140,11 +140,12 @@ def resolve(url):
                 vid_link = re.search(r'var\s*vid_link\s*=\s*"([^"]*?)"', data)
                 at = re.search(r'var\s*at\s*=\s*"([^"]*?)"', data)
                 if vid_server and vid_link and at:
-                    post_data = {'server': vid_server.group(1), 'link': vid_link.group(1), 'at': at.group(1)}
-                    data = util.request("http://hqq.tv/player/get_md5.php?" + urllib.urlencode(post_data), headers)
+                    get_data = {'server': vid_server.group(1), 'link': vid_link.group(1), 'at': at.group(1),
+                                'adb': '0\\'}
+                    data = util.request("http://hqq.tv/player/get_md5.php?" + urllib.urlencode(get_data), headers)
                     file_url = re.search(r'"file"\s*:\s*"([^"]*?)"', data)
                     if file_url:
-                        return [{'url': _decode2(file_url.group(1)), 'quality': '???'}]
+                        return [{'url': _decode2(file_url.group(1).replace('\\', '')), 'quality': '???'}]
     return None
 
 
