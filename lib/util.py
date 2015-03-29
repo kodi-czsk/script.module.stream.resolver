@@ -29,6 +29,7 @@ import cookielib
 from htmlentitydefs import name2codepoint as n2cp
 import threading
 import Queue
+import pickle
 
 import simplejson as json
 
@@ -37,14 +38,41 @@ UA = 'Mozilla/6.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/20080924
 LOG = 2
 sys.path.append(os.path.join(os.path.dirname(__file__), 'contentprovider'))
 
+_cookie_jar = None
 
-def init_urllib():
+CACHE_COOKIES = 'cookies'
+
+
+class _StringCookieJar(cookielib.LWPCookieJar):
+    def __init__(self, string=None, filename=None, delayload=False, policy=None):
+        cookielib.LWPCookieJar.__init__(self, filename, delayload, policy)
+        if string and len(string) > 0:
+            self._cookies = pickle.loads(string)
+
+    def dump(self):
+        return pickle.dumps(self._cookies)
+
+
+def init_urllib(cache=None):
     """
     Initializes urllib cookie handler
     """
-    cj = cookielib.LWPCookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    global _cookie_jar
+    data = None
+    if cache is not None:
+        data = cache.get(CACHE_COOKIES)
+    _cookie_jar = _StringCookieJar(data)
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cookie_jar))
     urllib2.install_opener(opener)
+
+
+def cache_cookies(cache):
+    """
+    Saves cookies to cache
+    """
+    global _cookie_jar
+    if _cookie_jar:
+        cache.set(CACHE_COOKIES, _cookie_jar.dump())
 
 
 def request(url, headers={}):
