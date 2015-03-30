@@ -18,29 +18,36 @@
 # *
 # */
 
-import sys,os,util,re,traceback
+import sys
+import os
+import re
+import traceback
 
-sys.path.append( os.path.join ( os.path.dirname(__file__),'server') )
+import util
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'server'))
 
 RESOLVERS = []
 util.debug('%s searching for modules' % __name__)
-for module in os.listdir(os.path.join(os.path.dirname(__file__),'server')):
+for module in os.listdir(os.path.join(os.path.dirname(__file__), 'server')):
     if module == '__init__.py' or module[-3:] != '.py':
         continue
     module = module[:-3]
     exec 'import %s' % module
     resolver = eval(module)
-    util.debug('found %s %s' % (resolver,dir(resolver)))
+    util.debug('found %s %s' % (resolver, dir(resolver)))
 
-    if not hasattr(resolver,'__priority__'):
+    if not hasattr(resolver, '__priority__'):
         resolver.__priority__ = 0
     RESOLVERS.append(resolver)
-del module
-RESOLVERS = sorted(RESOLVERS,key=lambda m: -m.__priority__)
+    del module
+RESOLVERS = sorted(RESOLVERS, key=lambda m: -m.__priority__)
 util.debug('done')
 
+
 def item():
-    return {'name':'','url':'','quality':'???','surl':'','subs':'','headers':{}}
+    return {'name': '', 'url': '', 'quality': '???', 'surl': '', 'subs': '', 'headers': {}}
+
 
 def resolve(url):
     """
@@ -51,65 +58,72 @@ def resolve(url):
         returns Array of resolved objects in positive usecase
     """
     url = util.decode_html(url)
-    util.info('Resolving '+url)
+    util.info('Resolving ' + url)
     resolver = _get_resolver(url)
     value = None
-    if resolver == None:
+    if resolver is None:
         return None
-    util.info('Using resolver \'%s\''%str(resolver.__name__));
+    util.info('Using resolver \'%s\'' % str(resolver.__name__));
     try:
         value = resolver.resolve(url)
     except:
         traceback.print_exc()
-    if value == None:
+    if value is None:
         return False
     default = item()
-    # fix  missing but required values 
-    def fix_stream(i,url,resolver,default):
-        if not 'name' in i.keys():
+
+    def fix_stream(i, url, resolver, default):
+        """ fix  missing but required values """
+        if 'name' not in i.keys():
             i['name'] = resolver.__name__
-        if not 'surl' in i.keys():
+        if 'surl' not in i.keys():
             i['surl'] = url
         for key in default.keys():
-            if not key in i.keys():
+            if key not in i.keys():
                 i[key] = default[key]
-    [fix_stream(i,url,resolver,default) for i in value]
-    return sorted(value,key=lambda i:i['quality'])
+
+    [fix_stream(i, url, resolver, default) for i in value]
+    return sorted(value, key=lambda i: i['quality'])
 
 
 def _get_resolver(url):
-    util.debug('Get resolver for '+url)
+    util.debug('Get resolver for ' + url)
     for r in RESOLVERS:
         util.debug('querying %s' % r)
         if r.supports(url):
             return r
 
-# returns true iff we are able to resolve stream by given URL
+
 def can_resolve(url):
-    return not _get_resolver(url) == None
+    """ Returns true iff we are able to resolve stream by given URL """
+    return _get_resolver(url) is not None
+
 
 def filter_resolvable(url):
     if url.find('facebook') > 0 or url.find('yield') > 0:
         return
     return url.strip('\'\"')
-##
-# finds streams in given data according to given regexes
-# respects caller addon's setting about quality, asks user if needed
-# @param data piece of text (HTML code) to search in
-# @param regexes - array of strings - regular expressions, each MUST define named group called 'url'
-#        which retrieves resolvable URL (that one is passsed to resolve operation)
-# @return array of resolved objects ({name,url,quality,surl})
-# @return None if at least 1 resoler failed to resolve and nothing else has been found
-# @return [] if no resolvers for URLs has been found
-# @return False if none of regexes found anything
-def findstreams(data,regexes):
-    resolvables = {} # map to keep each link exactly once
+
+
+def findstreams(data, regexes):
+    """
+    Finds streams in given data according to given regexes
+    respects caller addon's setting about quality, asks user if needed
+    @param data piece of text (HTML code) to search in
+    @param regexes - array of strings - regular expressions, each MUST define named group called 'url'
+    which retrieves resolvable URL (that one is passsed to resolve operation)
+    @return array of resolved objects ({name,url,quality,surl})
+    @return None if at least 1 resoler failed to resolve and nothing else has been found
+    @return [] if no resolvers for URLs has been found
+    @return False if none of regexes found anything
+    """
+    resolvables = {}  # map to keep each link exactly once
     resolved = []
     # keep list of found urls to aviod having duplicates
     urls = []
     notFound = False
     for regex in regexes:
-        for match in re.finditer(regex,data,re.IGNORECASE | re.DOTALL):
+        for match in re.finditer(regex, data, re.IGNORECASE | re.DOTALL):
             url = filter_resolvable(match.group('url'))
             if url:
                 util.info('Found resolvable %s ' % url)
@@ -117,30 +131,32 @@ def findstreams(data,regexes):
     if len(resolvables) == 0:
         util.info('No resolvables found!')
         return False
-    for rurl in resolvables:        
-            streams = resolve(rurl)
-            if streams == False:
-                util.info('There was an error resolving '+rurl)
-            elif streams == None:
-                util.info('No resolver found for '+rurl)
-                notFound = True
-            else:
-                if len(streams) > 0:
-                    for stream in streams:
-                        resolved.append(stream)
+    for rurl in resolvables:
+        streams = resolve(rurl)
+        if streams is None:
+            util.info('No resolver found for ' + rurl)
+            notFound = True
+        elif not streams:
+            util.info('There was an error resolving ' + rurl)
+        else:
+            if len(streams) > 0:
+                for stream in streams:
+                    resolved.append(stream)
     if len(resolved) == 0:
         if notFound:
             return []
         return None
-    resolved = sorted(resolved,key=lambda i:i['quality'])
-    resolved = sorted(resolved,key=lambda i:len(i['quality']))
+    resolved = sorted(resolved, key=lambda i: i['quality'])
+    resolved = sorted(resolved, key=lambda i: len(i['quality']))
     resolved.reverse()
     return resolved
 
-q_map = {'3':'720p','4':'480p','5':'360p'}
 
-def filter_by_quality(resolved,q):
-    util.info('filtering by quality setting '+q)
+q_map = {'3': '720p', '4': '480p', '5': '360p'}
+
+
+def filter_by_quality(resolved, q):
+    util.info('filtering by quality setting ' + q)
     if q == '0':
         return resolved
     sources = {}
@@ -156,7 +172,7 @@ def filter_by_quality(resolved,q):
         for key in sources.keys():
             ret.append(sources[key][0])
     elif q == '2':
-        #always return worse quality from each source
+        # always return worse quality from each source
         for key in sources.keys():
             ret.append(sources[key][-1])
     else:
@@ -170,38 +186,39 @@ def filter_by_quality(resolved,q):
                     ret.append(item)
                     added = True
             if not added:
-                util.debug('Desired quality %s not found, adding best found'%quality)
+                util.debug('Desired quality %s not found, adding best found' % quality)
                 ret.append(sources[key][-1])
     # sort results again, so best quality streams appear first
-    ret = sorted(ret,key=lambda i:i['quality'])
+    ret = sorted(ret, key=lambda i: i['quality'])
     if not q == '2':
         ret.reverse()
     return ret
 
 
-##
-# finds streams in given data according to given regexes
-# respects caller addon's setting about desired quality, asks user if needed
-# assumes, that all resolvables need to be returned, but in particular quality
-# @param data piece of text (HTML code) to search in
-# @param regexes - array of strings - regular expressions, each MUST define named group called 'url'
-#        which retrieves resolvable URL (that one is passsed to resolve operation)
-# @return array of dictionaries with keys: name,url,quality,surl
-# @return None if at least 1 resoler failed to resolve and nothing else has been found
-# @return [] if no resolvable URLs or no resolvers for URL has been found
-def findstreams_multi(data,regexes):
+def findstreams_multi(data, regexes):
+    """
+    Finds streams in given data according to given regexes
+    respects caller addon's setting about desired quality, asks user if needed
+    assumes, that all resolvables need to be returned, but in particular quality
+    @param data piece of text (HTML code) to search in
+    @param regexes - array of strings - regular expressions, each MUST define named group called 'url'
+    which retrieves resolvable URL (that one is passsed to resolve operation)
+    @return array of dictionaries with keys: name,url,quality,surl
+    @return None if at least 1 resoler failed to resolve and nothing else has been found
+    @return [] if no resolvable URLs or no resolvers for URL has been found
+    """
     resolved = []
     # keep list of found urls to aviod having duplicates
     urls = []
     error = False
     for regex in regexes:
-        for match in re.finditer(regex,data,re.IGNORECASE | re.DOTALL):
+        for match in re.finditer(regex, data, re.IGNORECASE | re.DOTALL):
             print 'Found resolvable %s ' % match.group('url')
             streams = resolve(match.group('url'))
-            if streams == []:
-                util.debug('There was an error resolving '+match.group('url'))
+            if isinstance(streams, list) and streams:
+                util.debug('There was an error resolving ' + match.group('url'))
                 error = True
-            if not streams == None:
+            if streams is not None:
                 if len(streams) > 0:
                     for stream in streams:
                         resolved.append(stream)
@@ -209,8 +226,8 @@ def findstreams_multi(data,regexes):
         return None
     if len(resolved) == 0:
         return []
-    resolved = sorted(resolved,key=lambda i:i['quality'])
-    resolved = sorted(resolved,key=lambda i:len(i['quality']))
+    resolved = sorted(resolved, key=lambda i: i['quality'])
+    resolved = sorted(resolved, key=lambda i: len(i['quality']))
     resolved2 = resolved
     resolved2.reverse()
     qualities = {}
@@ -221,5 +238,5 @@ def findstreams_multi(data,regexes):
             qualities[item['quality']] = [item]
     # now .. we must sort items to be in same order as they were found on page
     for q in qualities.keys():
-        qualities[q] = sorted(qualities[q],key=lambda i:resolved.index(i))
+        qualities[q] = sorted(qualities[q], key=lambda i: resolved.index(i))
     return qualities
