@@ -95,7 +95,7 @@ def _get_resolver(url):
 
 
 def can_resolve(url):
-    """ Returns true iff we are able to resolve stream by given URL """
+    """ Returns true if we are able to resolve stream by given URL """
     return _get_resolver(url) is not None
 
 
@@ -105,45 +105,54 @@ def filter_resolvable(url):
     return url.strip('\'\"')
 
 
-def findstreams(data, regexes):
+def findstreams(data, regexes=None):
     """
-    Finds streams in given data according to given regexes
-    respects caller addon's setting about quality, asks user if needed
-    @param data piece of text (HTML code) to search in
-    @param regexes - array of strings - regular expressions, each MUST define named group called 'url'
-    which retrieves resolvable URL (that one is passsed to resolve operation)
-    @return array of resolved objects ({name,url,quality,surl})
-    @return None if at least 1 resoler failed to resolve and nothing else has been found
-    @return [] if no resolvers for URLs has been found
-    @return False if none of regexes found anything
+    Finds streams in given data. Respects caller add-on settings about
+    quality and asks user if necessary.
+
+    :param data: A string (piece of text / HTML code) or an array of URLs
+    :param regexes: An array of strings - regular expressions, each MUST define
+                    named group called 'url', which retrieves resolvable URL
+                    (that one is passed to resolve operation); only used
+                    with 'data' of type 'string'
+    :returns: An array of resolved objects, None if at least 1 resolver failed
+              to resolve and nothing else was found, an empty array if no
+              resolvers for URLs has been found or False if none of regexes
+              found anything
     """
-    resolvables = {}  # map to keep each link exactly once
-    resolved = []
-    # keep list of found urls to aviod having duplicates
     urls = []
-    notFound = False
-    for regex in regexes:
-        for match in re.finditer(regex, data, re.IGNORECASE | re.DOTALL):
-            url = filter_resolvable(match.group('url'))
-            if url:
-                util.info('Found resolvable %s ' % url)
-                resolvables[url] = None
+    resolvables = []
+    resolved = []
+    not_found = False
+    if isinstance(data, basestring) and regexes:
+        for regex in regexes:
+            for match in re.finditer(regex, data, re.IGNORECASE | re.DOTALL):
+                urls.append(match.group('url'))
+    elif isinstance(data, list):
+        urls = data
+    else:
+        raise TypeError
+    for url in urls:
+        url = filter_resolvable(url)
+        if url and url not in resolvables:
+            util.info('Found resolvable ' + url)
+            resolvables.append(url)
     if len(resolvables) == 0:
         util.info('No resolvables found!')
         return False
-    for rurl in resolvables:
-        streams = resolve(rurl)
+    for url in resolvables:
+        streams = resolve(url)
         if streams is None:
-            util.info('No resolver found for ' + rurl)
-            notFound = True
+            util.info('No resolver found for ' + url)
+            not_found = True
         elif not streams:
-            util.info('There was an error resolving ' + rurl)
+            util.info('There was an error resolving ' + url)
         else:
             if len(streams) > 0:
                 for stream in streams:
                     resolved.append(stream)
     if len(resolved) == 0:
-        if notFound:
+        if not_found:
             return []
         return None
     resolved = sorted(resolved, key=lambda i: i['quality'])

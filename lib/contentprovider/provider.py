@@ -122,15 +122,14 @@ class ContentProvider(object):
         """
         return []
 
-    def findstreams(self, data, regexes):
+    def findstreams(self, data, regexes=None):
         """
-        Finds streams (see resovler.findstreams for more details)
+        Finds streams in given data (see resovler.findstreams for more details)
 
-        Args:
-            data (str): data (piece of HTML for example) to search links
-            regexes (array): array of regexes to search interesting urls in data
-        Returns:
-            array of video items
+        :param data: A string (piece of HTML, for example) or an array of URLs
+        :param regexes: An array of regexes to be used for extracting URLs from
+                        'data' of type 'string'
+        :returns: An array of video items
         """
         resolved = resolver.findstreams(data, regexes)
         if resolved is None:
