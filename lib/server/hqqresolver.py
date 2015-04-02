@@ -148,7 +148,7 @@ def resolve(url):
                     data = json.load(StringIO(util.request("http://hqq.tv/player/get_md5.php?" +
                                                            urllib.urlencode(get_data), headers)))
                     if 'file' in data:
-                        return [{'url': _decode2(data['file']), 'quality': '???'}]
+                        return [{'url': _decode2(data['file']), 'quality': '360p'}]
     return None
 
 
