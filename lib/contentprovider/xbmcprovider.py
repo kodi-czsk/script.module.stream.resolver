@@ -40,7 +40,8 @@ class XBMContentProvider(object):
         util.info('Initializing provider %s with settings %s'%(provider.name,settings))
         self.addon = addon
         self.addon_id = addon.getAddonInfo('id')
-        self.check_setting_keys(['downloads'])
+        if '!download' not in self.provider.capabilities():
+            self.check_setting_keys(['downloads'])
         self.cache = provider.cache
 
     def check_setting_keys(self,keys):
@@ -248,7 +249,9 @@ class XBMContentProvider(object):
         else:
             item['size'] = ' (%s)' % item['size']
         title = '%s%s' % (item['title'],item['size'])
-        menuItems = {xbmc.getLocalizedString(33003):downparams}
+        menuItems = {}
+        if "!download" not in self.provider.capabilities():
+            menuItems[xbmc.getLocalizedString(33003)] = downparams
         if 'menu' in item.keys():
             for ctxtitle, value in item['menu'].iteritems():
                 if ctxtitle.find('$') == 0:
