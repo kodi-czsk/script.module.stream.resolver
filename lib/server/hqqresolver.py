@@ -148,7 +148,7 @@ def resolve(url):
                     data = json.load(StringIO(util.request("http://hqq.tv/player/get_md5.php?" +
                                                            urllib.urlencode(get_data), headers)))
                     if 'file' in data:
-                        return [{'url': _decode2(data['file']), 'quality': '???'}]
+                        return [{'url': _decode2(data['file']), 'quality': '360p'}]
     return None
 
 
@@ -159,6 +159,11 @@ def _regex(url):
     match = re.search(r'(hqq|netu)\.tv/player/embed_player\.php\?vid=(?P<vid>[0-9A-Z]+)', url)
     if match:
         return match
+    match = re.search(r'(hqq|netu)\.tv/player/hash\.php\?hash=\d+', url)
+    if match:
+        match = re.search(r'var\s+vid\s*=\s*\'(?P<vid>[^\']+)\'', urllib.unquote(util.request(url)))
+        if match:
+            return match
     b64enc = re.search(r'data:text/javascript\;charset\=utf\-8\;base64([^\"]+)', url)
     b64dec = b64enc and base64.decodestring(b64enc.group(1))
     enc = b64dec and re.search(r"\'([^']+)\'", b64dec).group(1)
