@@ -36,6 +36,8 @@ class XBMContentProvider(object):
             name (str): name of provider
         '''
         self.provider = provider
+        # inject current user language
+        provider.lang = xbmc.getLanguage(xbmc.ISO_639_1)
         self.settings = settings
         util.info('Initializing provider %s with settings %s'%(provider.name,settings))
         self.addon = addon

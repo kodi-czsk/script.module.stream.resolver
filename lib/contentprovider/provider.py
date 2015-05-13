@@ -60,6 +60,7 @@ class ContentProvider(object):
         self.filter = filter
         self.tmp_dir = tmp_dir
         self.cache = StorageServer.StorageServer(self.name, 24)
+        self.lang = 'cs' # initialize, current language could be set by XBMContentProvider
 
     def __str__(self):
         return 'ContentProvider' + self.name
