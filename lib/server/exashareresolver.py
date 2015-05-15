@@ -34,7 +34,7 @@ def resolve(url):
     data = util.request(url)
     playlist = re.search(r'playlist:\s*\[.+?file:\s*\"([^\"]+)\"', data, flags=re.S)
     if playlist:
-        stream = {'url': playlist.group(1), 'quality': '???'}
+        stream = {'url': playlist.group(1), 'quality': '360p'}
         tracks = re.search(r'tracks:\s*\[.+?file:\s*\"([^\"]+)\",\s*label:\s*\"([^\"]+)\"',
                            data, flags=re.S)
         if tracks:
