@@ -1,3 +1,7 @@
+[B]1.6.30:[/B]
+- fix froto compatibility issue
+[B]1.6.29:[/B]
+- providers have now injected 'lang' - current language of xbmc/kodi user
 [B]1.6.24:[/B]
 - resolvers: support for displaying additional info (audio track language, etc)
 - streamujtv: return all possible streams (incl. audio track combinations) #223

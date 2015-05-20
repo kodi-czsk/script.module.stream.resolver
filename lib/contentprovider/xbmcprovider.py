@@ -37,7 +37,10 @@ class XBMContentProvider(object):
         '''
         self.provider = provider
         # inject current user language
-        provider.lang = xbmc.getLanguage(xbmc.ISO_639_1)
+        try: #not fully supported on Frodo
+            provider.lang = xbmc.getLanguage(xbmc.ISO_639_1)
+        except:
+            pass
         self.settings = settings
         util.info('Initializing provider %s with settings %s'%(provider.name,settings))
         self.addon = addon
