@@ -47,7 +47,7 @@ class _StringCookieJar(cookielib.LWPCookieJar):
     def __init__(self, string=None, filename=None, delayload=False, policy=None):
         cookielib.LWPCookieJar.__init__(self, filename, delayload, policy)
         if string and len(string) > 0:
-            self._cookies = pickle.loads(string)
+            self._cookies = pickle.loads(str(string))
 
     def dump(self):
         return pickle.dumps(self._cookies)
