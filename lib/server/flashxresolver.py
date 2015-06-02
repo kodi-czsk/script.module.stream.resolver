@@ -19,9 +19,9 @@
 
 import re
 from xml.etree import ElementTree
-
 import util
-
+from demjson import demjson
+from copy import deepcopy
 
 __name__ = 'flashx'
 
@@ -46,22 +46,40 @@ def supports(url):
 
 
 def resolve(url):
-    data = re.search(
-        r'<script\s*type=\"text/javascript\">.+?}\(\'(.+)\',\d+,\d+,\'([\w\|]+)\'.*</script>',
-        util.request(url), re.I | re.S)
+    data = re.search(r'<script.+?}\(\'(.+)\',\d+,\d+,\'([\w\|]+)\'.*</script>',
+                     util.request(url), re.I | re.S)
     if data:
         replacements = data.group(2).split('|')
         data = data.group(1)
         for i in reversed(range(len(replacements))):
-            data = re.sub(r'\b' + base36encode(i) + r'\b', replacements[i], data)
-        data = re.search(r'file:\s*\"([^\"]+\.smil)\"', data)
+            if len(replacements[i]) > 0:
+                data = re.sub(r'\b%s\b' % base36encode(i), replacements[i], data)
+        data = re.search(r'\.setup\(([^\)]+?)\);', data)
         if data:
             result = []
-            tree = ElementTree.fromstring(util.request(data.group(1)))
-            base_path = tree.find('./head/meta').get('base')
-            for video in tree.findall('./body/switch/video'):
-                result.append({'url': base_path + ' playpath=' + video.get('src') + ' pageUrl=' + url +
-                               ' swfUrl=http://static.flashx.tv/player6/jwplayer.flash.swf swfVfy=true',
-                               'quality': video.get('height') + 'p'})
+            data = demjson.decode(data.group(1).decode('string_escape'))
+            for source in data['sources']:
+                items = []
+                if source['file'].endswith('.smil'):
+                    tree = ElementTree.fromstring(util.request(source['file']))
+                    base_path = tree.find('./head/meta').get('base')
+                    for video in tree.findall('./body/switch/video'):
+                        items.append({
+                            'url': '%s playpath=%s pageUrl=%s swfUrl=%s swfVfy=true' %
+                                   (base_path, video.get('src'), url,
+                                    'http://static.flashx.tv/player6/jwplayer.flash.swf'),
+                            'quality': video.get('height') + 'p'
+                        })
+                else:
+                    items.append({'url': source['file']})
+                if len(data['tracks']) > 0:
+                    for item in items:
+                        for track in data['tracks']:
+                            new_item = deepcopy(item)
+                            new_item['subs'] = track['file']
+                            new_item['lang'] = ' %s subtitles' % track['label']
+                            result.append(new_item)
+                else:
+                    result += items
             return result
     return None
