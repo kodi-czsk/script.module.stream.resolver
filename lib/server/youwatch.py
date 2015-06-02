@@ -21,6 +21,7 @@
 # */
 import re
 import util
+from demjson import demjson
 
 __author__ = 'Lubomir Kucera'
 __name__ = 'youwatch'
@@ -54,7 +55,9 @@ def resolve(url):
         data = data.group(1)
         for i in reversed(range(len(replacements))):
             data = re.sub(r'\b' + base36encode(i) + r'\b', replacements[i], data)
-        data = re.search(r'file:\s*\"([^\"]+)\"', data)
+        data = re.search(r'\.setup\(([^\)]+?)\);', data)
         if data:
-            return [{'url': data.group(1)}]
+            data = demjson.decode(data.group(1).decode('string_escape'))
+            if 'file' in data:
+                return [{'url': data['file']}]
     return None
