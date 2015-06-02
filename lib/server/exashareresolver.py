@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # /*
-# *      Copyright (C) 2011 Lubomir Kucera
+# *      Copyright (C) 2015 Lubomir Kucera
 # *
 # *
 # *  This Program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 # */
 import re
 import util
+from demjson import demjson
 
 __author__ = 'Lubomir Kucera'
 __name__ = 'exashare'
@@ -31,14 +32,19 @@ def supports(url):
 
 
 def resolve(url):
-    data = util.request(url)
-    playlist = re.search(r'playlist:\s*\[.+?file:\s*\"([^\"]+)\"', data, flags=re.S)
-    if playlist:
-        stream = {'url': playlist.group(1), 'quality': '360p'}
-        tracks = re.search(r'tracks:\s*\[.+?file:\s*\"([^\"]+)\",\s*label:\s*\"([^\"]+)\"',
-                           data, flags=re.S)
-        if tracks:
-            stream['subs'] = tracks.group(1)
-            stream['lang'] = ' ' + tracks.group(2) + ' subtitles'
-        return [stream]
+    data = re.search(r'<script[^\.]+?\.setup\((.+?)\);', util.request(url), re.I | re.S)
+    if data:
+        data = data.group(1).decode('string_escape')
+        data = re.sub(r'\w+\(([^\)]+?)\)', r'\1', data)  # Strip JS functions
+        data = demjson.decode(data)
+        if 'playlist' in data:
+            result = []
+            for stream in data['playlist']:
+                if 'tracks' in stream:
+                    for track in stream['tracks']:
+                        result.append({'url': stream['file'], 'subs': track['file'],
+                                       'lang': ' %s subtitles' % track['label']})
+                else:
+                    result.append({'url': stream['file']})
+            return result
     return None
