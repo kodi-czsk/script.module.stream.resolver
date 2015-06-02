@@ -27,21 +27,6 @@ __author__ = 'Lubomir Kucera'
 __name__ = 'youwatch'
 
 
-def base36encode(number):
-    alphabet = '0123456789abcdefghijklmnopqrstuvwxyz'
-    base36 = ''
-    sign = ''
-    if number < 0:
-        sign = '-'
-        number = -number
-    if 0 <= number < len(alphabet):
-        return sign + alphabet[number]
-    while number != 0:
-        number, i = divmod(number, len(alphabet))
-        base36 = alphabet[i] + base36
-    return sign + base36
-
-
 def supports(url):
     return re.search(r'youwatch\.org/embed\-[^\.]+\.html', url) is not None
 
@@ -54,7 +39,7 @@ def resolve(url):
         replacements = data.group(2).split('|')
         data = data.group(1)
         for i in reversed(range(len(replacements))):
-            data = re.sub(r'\b' + base36encode(i) + r'\b', replacements[i], data)
+            data = re.sub(r'\b%s\b' % util.int_to_base(i, 36), replacements[i], data)
         data = re.search(r'\.setup\(([^\)]+?)\);', data)
         if data:
             data = demjson.decode(data.group(1).decode('string_escape'))
