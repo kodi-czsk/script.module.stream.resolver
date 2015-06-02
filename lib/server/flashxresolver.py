@@ -26,21 +26,6 @@ from copy import deepcopy
 __name__ = 'flashx'
 
 
-def base36encode(number):
-    alphabet = '0123456789abcdefghijklmnopqrstuvwxyz'
-    base36 = ''
-    sign = ''
-    if number < 0:
-        sign = '-'
-        number = -number
-    if 0 <= number < len(alphabet):
-        return sign + alphabet[number]
-    while number != 0:
-        number, i = divmod(number, len(alphabet))
-        base36 = alphabet[i] + base36
-    return sign + base36
-
-
 def supports(url):
     return re.search(r'flashx\.tv/embed\-[^\.]+\.html', url) is not None
 
@@ -53,7 +38,7 @@ def resolve(url):
         data = data.group(1)
         for i in reversed(range(len(replacements))):
             if len(replacements[i]) > 0:
-                data = re.sub(r'\b%s\b' % base36encode(i), replacements[i], data)
+                data = re.sub(r'\b%s\b' % util.int_to_base(i, 36), replacements[i], data)
         data = re.search(r'\.setup\(([^\)]+?)\);', data)
         if data:
             result = []

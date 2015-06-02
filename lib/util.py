@@ -30,9 +30,8 @@ from htmlentitydefs import name2codepoint as n2cp
 import threading
 import Queue
 import pickle
-
+import string
 import simplejson as json
-
 
 UA = 'Mozilla/6.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/2008092417 Firefox/3.0.3'
 LOG = 2
@@ -276,3 +275,22 @@ def params(url=None):
     for p in param.keys():
         param[p] = param[p].decode('hex')
     return param
+
+
+def int_to_base(number, base):
+    digs = string.digits + string.letters
+    if number < 0:
+        sign = -1
+    elif number == 0:
+        return digs[0]
+    else:
+        sign = 1
+    number *= sign
+    digits = []
+    while number:
+        digits.append(digs[number % base])
+        number /= base
+    if sign < 0:
+        digits.append('-')
+    digits.reverse()
+    return ''.join(digits)
