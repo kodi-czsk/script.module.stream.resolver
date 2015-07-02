@@ -40,6 +40,7 @@ class XBMContentProvider(object):
         try: #not fully supported on Frodo
             provider.lang = xbmc.getLanguage(xbmc.ISO_639_1)
         except:
+            provider.lang = None
             pass
         self.settings = settings
         util.info('Initializing provider %s with settings %s'%(provider.name,settings))
@@ -146,6 +147,7 @@ class XBMContentProvider(object):
             xbmcutil.download(self.addon,name,self.provider._url(stream['url']),os.path.join(downloads,name),headers=stream['headers'])
 
     def play(self,item):
+        #xbmcplugin.setResolvedUrl(int(0), True, xbmcgui.ListItem(path='/dev/null'))
         stream = self.resolve(item['url'])
         if stream:
             xbmcutil.reportUsage(self.addon_id,self.addon_id+'/play')
