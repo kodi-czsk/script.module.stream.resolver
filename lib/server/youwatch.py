@@ -21,7 +21,6 @@
 # */
 import re
 import util
-from demjson import demjson
 
 __author__ = 'Lubomir Kucera'
 __name__ = 'youwatch'
@@ -32,17 +31,7 @@ def supports(url):
 
 
 def resolve(url):
-    data = re.search(
-        r'<script\s*type=\"text/javascript\">.+?}\(\'(.+)\',\d+,\d+,\'([\w\|]+)\'.*</script>',
-        util.request(url), re.I | re.S)
-    if data:
-        replacements = data.group(2).split('|')
-        data = data.group(1)
-        for i in reversed(range(len(replacements))):
-            data = re.sub(r'\b%s\b' % util.int_to_base(i, 36), replacements[i], data)
-        data = re.search(r'\.setup\(([^\)]+?)\);', data)
-        if data:
-            data = demjson.decode(data.group(1).decode('string_escape'))
-            if 'file' in data:
-                return [{'url': data['file']}]
+    data = util.extract_jwplayer_setup(util.request(url))
+    if data and 'file' in data:
+        return [{'url': data['file']}]
     return None
