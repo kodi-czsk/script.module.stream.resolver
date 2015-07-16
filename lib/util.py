@@ -32,6 +32,7 @@ import Queue
 import pickle
 import string
 import simplejson as json
+from demjson import demjson
 
 UA = 'Mozilla/6.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/2008092417 Firefox/3.0.3'
 LOG = 2
@@ -294,3 +295,23 @@ def int_to_base(number, base):
         digits.append('-')
     digits.reverse()
     return ''.join(digits)
+
+
+def extract_jwplayer_setup(data):
+    """
+    Extracts jwplayer setup configuration and returns it as a dictionary.
+
+    :param data: A string to extract the setup from
+    :return: A dictionary containing the setup configuration
+    """
+    data = re.search(r'<script.+?}\(\'(.+)\',\d+,\d+,\'([\w\|]+)\'.*</script>', data, re.I | re.S)
+    if data:
+        replacements = data.group(2).split('|')
+        data = data.group(1)
+        for i in reversed(range(len(replacements))):
+            if len(replacements[i]) > 0:
+                data = re.sub(r'\b%s\b' % int_to_base(i, 36), replacements[i], data)
+        data = re.search(r'\.setup\(([^\)]+?)\);', data)
+        if data:
+            return demjson.decode(data.group(1).decode('string_escape'))
+    return None
