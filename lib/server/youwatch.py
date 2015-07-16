@@ -39,7 +39,8 @@ def resolve(url):
         replacements = data.group(2).split('|')
         data = data.group(1)
         for i in reversed(range(len(replacements))):
-            data = re.sub(r'\b%s\b' % util.int_to_base(i, 36), replacements[i], data)
+            if len(replacements[i]) > 0:
+                data = re.sub(r'\b%s\b' % util.int_to_base(i, 36), replacements[i], data)
         data = re.search(r'\.setup\(([^\)]+?)\);', data)
         if data:
             data = demjson.decode(data.group(1).decode('string_escape'))
