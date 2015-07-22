@@ -159,7 +159,7 @@ def init_usage_reporting(addonid):
 
 def save_to_file(url,file):
     try:
-        f = open(file,'w')
+        f = open(compat_path(file),'w')
         f.write(request(url))
         f.close()
         return True
@@ -168,9 +168,10 @@ def save_to_file(url,file):
 
 def load_subtitles(url):
     if not (url=='' or url==None):
-        local = xbmc.translatePath(__addon__.getAddonInfo('path'))
-        if not os.path.exists(local):
-            os.makedirs(local)
+        local = xbmc.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
+        c_local = compat_path(local)
+        if not os.path.exists(c_local):
+            os.makedirs(c_local)
         local = os.path.join(local,'xbmc_subs'+str(int(time.time()))+'.srt')
         if not save_to_file(url,local):
             return
@@ -183,7 +184,7 @@ def load_subtitles(url):
             if count>max_count-2:
                 util.debug("Cannot load subtitles, player timed out")
                 return
-        player.setSubtitles(local)
+        player.setSubtitles(local.encode('utf-8'))
 
 
 def _substitute_entity(match):
@@ -259,13 +260,14 @@ def search_list(cache):
 
 # obsolete functions .. 
 def get_searches(addon,server):
-    local = xbmc.translatePath(addon.getAddonInfo('profile'))
-    if not os.path.exists(local):
-        os.makedirs(local)
-    local = os.path.join(local,server)
-    if not os.path.exists(local):
+    local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    c_local = compat_path(local)
+    if not os.path.exists(c_local):
+        os.makedirs(c_local)
+    c_local = compat_path(os.path.join(local,server))
+    if not os.path.exists(c_local):
         return []
-    f = open(local,'r')
+    f = open(c_local,'r')
     data = f.read()
     searches = json.loads(unicode(data.decode('utf-8','ignore')))
     f.close()
@@ -273,12 +275,13 @@ def get_searches(addon,server):
 
 def add_search(addon,server,search,maximum):
     searches = []
-    local = xbmc.translatePath(addon.getAddonInfo('profile'))
-    if not os.path.exists(local):
-        os.makedirs(local)
-    local = os.path.join(local,server)
-    if os.path.exists(local):
-        f = open(local,'r')
+    local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    c_local = compat_path(local)
+    if not os.path.exists(c_local):
+        os.makedirs(c_local)
+    c_local = compat_path(os.path.join(local,server))
+    if os.path.exists(c_local):
+        f = open(c_local,'r')
         data = f.read()
         searches = json.loads(unicode(data.decode('utf-8','ignore')))
         f.close()
@@ -289,30 +292,32 @@ def add_search(addon,server,search,maximum):
     if remove>0:
         for i in range(remove):
             searches.pop()
-    f = open(local,'w')
+    f = open(c_local,'w')
     f.write(json.dumps(searches,ensure_ascii=True))
     f.close()
 
 def delete_search_history(addon,server):
-    local = xbmc.translatePath(addon.getAddonInfo('profile'))
-    if not os.path.exists(local):
+    local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    c_local = compat_path(local)
+    if not os.path.exists(c_local):
         return
-    local = os.path.join(local,server)
-    if os.path.exists(local):
-        os.remove(local)
+    c_local = compat_path(os.path.join(local,server))
+    if os.path.exists(c_local):
+        os.remove(c_local)
 
 def remove_search(addon,server,search):
-    local = xbmc.translatePath(addon.getAddonInfo('profile'))
-    if not os.path.exists(local):
+    local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    c_local = compat_path(local)
+    if not os.path.exists(c_local):
         return
-    local = os.path.join(local,server)
-    if os.path.exists(local):
-        f = open(local,'r')
+    c_local = compat_path(os.path.join(local,server))
+    if os.path.exists(c_local):
+        f = open(c_local,'r')
         data = f.read()
         searches = json.loads(unicode(data.decode('utf-8','ignore')))
         f.close()
         searches.remove(search)
-        f = open(local,'w')
+        f = open(c_local,'w')
         f.write(json.dumps(searches,ensure_ascii=True))
         f.close()
 # obsolete funcionts END
@@ -447,3 +452,12 @@ def replace_diacritic(string):
         else:
             ret.append(char)
     return ''.join(ret)
+
+def compat_path(path):
+    if sys.platform.startswith('win'):
+        if isinstance(path, str):
+            path = path.decode('utf-8')
+    else:
+        if isinstance(path, unicode):
+            path = path.encode('utf-8')
+    return path
