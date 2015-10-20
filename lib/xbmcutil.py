@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import os,re,sys,urllib,urllib2,traceback,cookielib,time,socket
+import os,re,sys,urllib,urllib2,traceback,cookielib,time,socket,unicodedata
 import xbmcgui,xbmcplugin,xbmc,xbmcaddon
 from htmlentitydefs import name2codepoint as n2cp
 import simplejson as json
@@ -334,44 +334,49 @@ def download(addon,filename,url,local,notifyFinishDialog=True,headers={}):
     except:
         filename = 'Video soubor'
     icon = os.path.join(addon.getAddonInfo('path'),'icon.png')
-    notify = addon.getSetting('download-notify') == 'true'
+    notifyEnabled = addon.getSetting('download-notify') == 'true'
     notifyEvery = addon.getSetting('download-notify-every')
     notifyPercent = 1
     if int(notifyEvery) == 0:
         notifyPercent = 10
     if int(notifyEvery) == 1:
         notifyPercent = 5
+
+    def encode(string):
+        return u' '.join(string).encode('utf-8')
+
+    def notify(title,message,time=3000):
+        try:
+            xbmcgui.Dialog().notification(encode(title),encode(message),time=time,icon=icon, sound=False)
+        except:
+            traceback.print_exc()
+            error('unable to show notification')
+
     def callback(percent,speed,est,filename):
         if percent == 0 and speed == 0:
-            try:
-                xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % (xbmc.getLocalizedString(13413).encode('utf-8'),filename,icon))
-            except:
-               error('Unable to show notification') 
+            notify(xbmc.getLocalizedString(13413),filename)
             return
-        if notify:
+        if notifyEnabled:
             if percent > 0 and percent % notifyPercent == 0:
                 esTime = '%ss' % est
                 if est>60:
                     esTime = '%sm' % int(est/60)
                 message = xbmc.getLocalizedString(24042) % percent + ' - %s KB/s %s' % (speed,esTime)
-                try:
-                    xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)'%(message.encode('utf-8'),filename,icon))
-                except:
-                    error('Unable to show notification')
+                notify(message, filename)
 
     downloader = Downloader(callback)
     result = downloader.download(url,local,filename,headers)
     try:
         if result == True:
             if xbmc.Player().isPlaying():
-                xbmc.executebuiltin('XBMC.Notification(%s,%s,8000,%s)' % (xbmc.getLocalizedString(20177),filename,icon))
+                notify(xbmc.getLocalizedString(20177),filename)
             else:
                 if notifyFinishDialog:
                     xbmcgui.Dialog().ok(xbmc.getLocalizedString(20177),filename)
                 else:
-                    xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % (xbmc.getLocalizedString(20177),filename,icon))
+                    notify(xbmc.getLocalizedString(20177),filename)
         else:
-            xbmc.executebuiltin('XBMC.Notification(%s,%s,5000,%s)' % (xbmc.getLocalizedString(257),filename,icon))
+            notify(xbmc.getLocalizedString(257),filename)
             xbmcgui.Dialog().ok(filename,xbmc.getLocalizedString(257) +' : '+result)
     except:
         traceback.print_exc()
