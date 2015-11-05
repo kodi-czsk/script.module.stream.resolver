@@ -31,7 +31,12 @@ def resolve(url):
         result = []
         qualities = re.search('rn\:[^\"]*\"([^\"]*)',data,re.IGNORECASE|re.DOTALL)
         langs = re.search('langs\:[^\"]*\"([^\"]+)',data,re.IGNORECASE|re.DOTALL)
-        for lang in langs.group(1).split(','):
+        languages = []
+        if not langs:
+            languages = [''] # pretend there is at least language so we read 1st stream info
+        else:
+            languages = langs.group(1).split(',')
+        for lang in languages:
             streams = re.search('res'+str(index)+'\:[^\"]*\"([^\"]+)',data,re.IGNORECASE|re.DOTALL)
             subs = re.search('sub'+str(index)+'\:[^\"]*\"([^\"]+)',data,re.IGNORECASE|re.DOTALL)
             if subs: 
