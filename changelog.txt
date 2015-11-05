@@ -1,3 +1,5 @@
+[B]1.6.36:[/B]
+- fix streamujtv resolver to play videos with missing lang
 [B]1.6.34:[/B]
 - fix usage tracker issue on windows
 [B]1.6.30:[/B]
