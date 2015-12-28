@@ -14,5 +14,6 @@
 	<string id="30012">[B]Latest videos[/B]</string>
 	<string id="30013">[B]Top videos[/B]</string>
 	<string id="30014">Waiting for file %ss</string>
-  <string id="30015">Do you want to enable usage tracking?</string>
+  	<string id="30015">Do you want to enable usage tracking?</string>
+    <string id="30016">Find similar</string>
 </strings>

@@ -74,23 +74,38 @@ class XBMContentProvider(object):
             return self.do_search(params['search'])
         if 'search-remove' in params.keys():
             return self.search_remove(params['search-remove'])
+        if 'search-edit' in params.keys():
+            return self.search_edit(params['search-edit'])
         if self.run_custom:
             return self.run_custom(params)
 
     def search_list(self):
         params = self.params()
         params.update({'search':'#'})
-        menuItems = self.params()
+        menu1 = self.params()
+        menu2 = self.params()
         xbmcutil.add_dir(xbmcutil.__lang__(30004),params,xbmcutil.icon('search.png'))
         for what in xbmcutil.search_list(self.cache):
             params['search'] = what
-            menuItems['search-remove'] = what
-            xbmcutil.add_dir(what,params,menuItems={xbmc.getLocalizedString(117):menuItems})
+            menu1['search-remove'] = what
+            menu2['search-edit'] = what
+            xbmcutil.add_dir(what,params,menuItems={xbmcutil.__lang__(30016): menu2, xbmc.getLocalizedString(117):menu1})
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def search_remove(self,what):
         xbmcutil.search_remove(self.cache,what)
         xbmc.executebuiltin('Container.Refresh')
+
+    def search_edit(self, what):
+        kb = xbmc.Keyboard(what,xbmcutil.__lang__(30003),False)
+        kb.doModal()
+        if kb.isConfirmed():
+            replacement = kb.getText()
+            xbmcutil.search_replace(self.cache, what, replacement)
+            params = self.params()
+            params.update({'search':replacement})
+            action = xbmcutil._create_plugin_url(params)
+            xbmc.executebuiltin('Container.Update(%s)'% action)
 
     def do_search(self,what):
         if what == '' or what == '#':

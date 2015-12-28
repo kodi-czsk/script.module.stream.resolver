@@ -132,7 +132,7 @@ def add_video(name,params={},logo='',infoLabels={},menuItems={}):
                     items.append((mi,'RunPlugin(%s)'%_create_plugin_url(action)))
             else:
                 items.append((mi,'RunPlugin(%s)'%_create_plugin_url(action)))
-                
+
     if len(items) > 0:
         li.addContextMenuItems(items)
     return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=li,isFolder=False)
@@ -200,9 +200,9 @@ def _substitute_entity(match):
         else:
             # they were using a name
             cp = n2cp.get(ent)
-            if cp: 
+            if cp:
                 return unichr(cp)
-            else: 
+            else:
                 return match.group()
 
 def decode_html(data):
@@ -235,6 +235,17 @@ def search_remove(cache,search):
     data.remove(search)
     cache.set('search',repr(data))
 
+def search_replace(cache, search, replacement):
+    data = cache.get('search')
+    if data == None or data == '':
+        data = []
+    else:
+        data = eval(data)
+    index = data.index(search)
+    if index > -1:
+        data[index] = replacement
+        cache.set('search', repr(data))
+
 def search_add(cache,search,maximum):
     data = cache.get('search')
     if data == None or data == '':
@@ -258,7 +269,7 @@ def search_list(cache):
         data = eval(data)
     return data
 
-# obsolete functions .. 
+# obsolete functions ..
 def get_searches(addon,server):
     local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
     c_local = compat_path(local)
