@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 #/*
-# *      Copyright (C) 2013 mx3L
+# *      Copyright (C) 2016 mx3L & lzoubek
 # *
 # *
 # *  This Program is free software; you can redistribute it and/or modify
@@ -29,11 +29,14 @@ def resolve(url):
     m = _regex(url)
     if m:
         items = []
-        quality = "???"
         vurl = m.group('url')
         vurl = re.sub('\&[^$]*','',vurl)
+        vurl = re.sub('/embed','',vurl)
+        vurl = 'http://videoapi.my.mail.ru/' + vurl + '.json'
+
         util.init_urllib()
-        req = urllib2.Request('http://api.video.mail.ru/videos/' + vurl + '.json')
+        req = urllib2.Request(vurl)
+        req.add_header('User-Agent', util.UA)
         resp = urllib2.urlopen(req)
         data = resp.read()
         vkey = []
@@ -41,18 +44,13 @@ def resolve(url):
             vkey.append(cookie.group(1))
         headers = {'Cookie':vkey[-1]}
         item = util.json.loads(data)
-        for qual in item[u'videos']:
-            if qual == 'sd':
-                quality = "480p"
-            elif qual == "hd":
-                quality = "640p"
-            else:
-                quality = "???"
-            link = item[u'videos'][qual]
+        for v in item[u'videos']:
+            quality = v['key']
+            link = v['url']
             items.append({'quality':quality, 'url':link, 'headers':headers})
         return items
 
 def _regex(url):
     m1 = re.search('http://.+?mail\.ru.+?<param.+?value=\"movieSrc=(?P<url>[^\"]+)', url, re.IGNORECASE | re.DOTALL)
-    m2 = re.search('http://video\.mail\.ru\/(?P<url>.+?)\.html', url, re.IGNORECASE | re.DOTALL)
+    m2 = re.search('://video.+?\.mail\.ru\/(?P<url>.+?)\.html', url, re.IGNORECASE | re.DOTALL)
     return m1 or m2
