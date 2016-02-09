@@ -33,6 +33,7 @@ import pickle
 import string
 import simplejson as json
 from demjson import demjson
+from bs4 import BeautifulSoup
 
 UA = 'Mozilla/6.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/2008092417 Firefox/3.0.3'
 LOG = 2
@@ -317,3 +318,7 @@ def extract_jwplayer_setup(data):
         if data:
             return demjson.decode(data.group(1).decode('string_escape'))
     return None
+
+
+def parse_html(url):
+    return BeautifulSoup(request(url), 'html5lib', from_encoding='utf-8')
