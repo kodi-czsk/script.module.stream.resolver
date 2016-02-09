@@ -44,6 +44,7 @@ CACHE_COOKIES = 'cookies'
 
 
 class _StringCookieJar(cookielib.LWPCookieJar):
+
     def __init__(self, string=None, filename=None, delayload=False, policy=None):
         cookielib.LWPCookieJar.__init__(self, filename, delayload, policy)
         if string and len(string) > 0:
@@ -110,6 +111,7 @@ def post_json(url, data, headers={}):
 def run_parallel_in_threads(target, args_list):
     result = Queue.Queue()
     # wrapper to collect return value in a Queue
+
     def task_wrapper(*args):
         result.put(target(*args))
 
@@ -196,7 +198,7 @@ def decode_html(data):
         return entity_re.subn(_substitute_entity, data)[0]
     except:
         traceback.print_exc()
-        print [data]
+        print[data]
         return data
 
 
@@ -257,7 +259,7 @@ def replace_diacritic(string):
 
 
 def params(url=None):
-    if url == None:
+    if not url:
         url = sys.argv[2]
     param = {}
     paramstring = url
