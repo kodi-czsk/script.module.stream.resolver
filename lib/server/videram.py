@@ -22,20 +22,18 @@
 import re
 import util
 
-__author__ = 'Jose Riha/Lubomir Kucera'
-__name__ = 'youwatch'
+__author__ = 'Jose Riha'
+__name__ = 'videram'
 
 
 def supports(url):
-    return re.search(r'youwatch\.org/embed\-[^\.]+\.html', url) is not None
+    return re.search(r'play\.videram\.com', url) is not None
 
 
 def resolve(url):
-    refererurl = re.search(r'<iframe src="([^"]+)".*', util.request(url), re.I | re.S).group(1)
     try:
-        data=[x for x in util.request(refererurl).splitlines() if 'file:' in x and '.mp4' in x][0]
+        data=[x for x in util.request('http:'+url).splitlines() if 'file:' in x and '.mp4' in x][0]
     except:
-        return None
-    streamurl = re.search(r'.*file:"([^"]+?)".*', data).group(1)
-    headers={'Referer': refererurl}
-    return [{'url': streamurl, 'headers': headers}]
+        return None 
+    streamurl = re.search(r'.*file: *"([^"]+?)".*', data).group(1)
+    return [{'url': streamurl}]
