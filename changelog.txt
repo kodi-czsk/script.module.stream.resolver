@@ -1,3 +1,6 @@
+[B]1.6.39:[/B]
+- Fixed Exashare, Openload and Youwatch resolvers
+- New resolver for Videram
 [B]1.6.37:[/B]
 - (for all plugins) search items can be now edited (Search Similar)
 [B]1.6.36:[/B]
@@ -25,10 +28,10 @@
 [B]1.6.11:[/B]
 - fixed putlocker and flashx resolvers (ibv)
 [B]1.6.10:[/B]
-- attempt to fix showing captcha image on windows (when there are special 
+- attempt to fix showing captcha image on windows (when there are special
 chars in profile path)
 [B]1.6.9:[/B]
-- attempt to fix showing captcha image on windows (when there are special 
+- attempt to fix showing captcha image on windows (when there are special
 chars in xbmc profile path)
 - added anyfiles resolver
 [B]1.6.8:[/B]
@@ -53,7 +56,7 @@ chars in xbmc profile path)
 [B]1.5.6:[/B]
 - fixed koukni - works back with mp4
 [B]1.5.5:[/B]
-- contentprovider fixes (does not fail when item title starts with $, supports 
+- contentprovider fixes (does not fail when item title starts with $, supports
 infolabels
 [B]1.5.4:[/B]
 - fixed koukni resolver to properly resolve rtmp
@@ -118,7 +121,7 @@ infolabels
 - fixed putlocker (by Ivo), videozer & videobb resolvers
 [B]1.2.7:[/B]
 - youtube resolver fixes
-- all resolvers now return non-empty 'subs' key within resolve2 or findstreams 
+- all resolvers now return non-empty 'subs' key within resolve2 or findstreams
 [B]1.2.6:[/B]
 - resolvers can now retrieve subtitles
 - added koukni.cz resovler (supports subtitles)
@@ -162,7 +165,7 @@ impl only
 - videobb - proper resolving
 [B]1.0.5:[/B]
 - added novamov, youtube, trivial - special does nothing
-- fixed megavideo and videozer 
+- fixed megavideo and videozer
 [B]1.0.4:[/B]
 - added megavideo, videozer resolvers
 - fixed zkouknito
