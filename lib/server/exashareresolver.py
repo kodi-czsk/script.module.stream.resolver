@@ -23,7 +23,7 @@ import re
 import util
 from demjson import demjson
 
-__author__ = 'Lubomir Kucera'
+__author__ = 'Jose Riha/Lubomir Kucera'
 __name__ = 'exashare'
 
 
@@ -32,19 +32,22 @@ def supports(url):
 
 
 def resolve(url):
-    data = re.search(r'<script[^\.]+?\.setup\((.+?)\);', util.request(url), re.I | re.S)
+    realurl = re.search(r'<iframe src="([^"]+)".*', util.request(url), re.I | re.S).group(1)
+    data = re.search(r'<script[^\.]+?\.setup\((.+?)\);', util.request(realurl), re.I | re.S)
     if data:
         data = data.group(1).decode('string_escape')
-        data = re.sub(r'\w+\(([^\)]+?)\)', r'\1', data)  # Strip JS functions
+        data = re.sub(r'\w+\(([^\)]+?)\)', r'\1', data) # Strip JS functions
+        data = re.sub(r': *([^"][a-zA-Z]+)',r':"\1"', data) # Fix incorrect JSON
         data = demjson.decode(data)
-        if 'playlist' in data:
+        if 'sources' in data:
             result = []
-            for stream in data['playlist']:
-                if 'tracks' in stream:
-                    for track in stream['tracks']:
-                        result.append({'url': stream['file'], 'subs': track['file'],
-                                       'lang': ' %s subtitles' % track['label']})
-                else:
-                    result.append({'url': stream['file']})
+            for source in data['sources']:           
+                if 'tracks' in data:                                                        
+                    for track in data['tracks']:                                            
+                        result.append({
+                                       'url': source['file'],
+                                      'subs': track['file'],
+                                      'lang': ' %s subtitles' % track['label']
+                                       })
             return result
     return None
