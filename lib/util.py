@@ -77,24 +77,30 @@ def cache_cookies(cache):
         cache.set(CACHE_COOKIES, _cookie_jar.dump())
 
 
-def request(url, headers={}):
+def request(url, headers={}, errors_are_useful=False):
     debug('request: %s' % url)
     req = urllib2.Request(url, headers=headers)
     req.add_header('User-Agent', UA)
-    response = urllib2.urlopen(req)
-    data = response.read()
-    response.close()
+    try:
+        response = urllib2.urlopen(req)
+        data = response.read()
+        response.close()
+    except urllib2.HTTPError, error:
+        if errors_are_useful: data=error.read() 
     debug('len(data) %s' % len(data))
     return data
 
 
-def post(url, data, headers={}):
+def post(url, data, headers={}, errors_are_useful=False):
     postdata = urllib.urlencode(data)
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
-    response = urllib2.urlopen(req)
-    data = response.read()
-    response.close()
+    try:
+        response = urllib2.urlopen(req)
+        data = response.read()
+        response.close()
+    except urllib2.HTTPError, error:
+        if errors_are_useful: data=error.read() 
     return data
 
 
