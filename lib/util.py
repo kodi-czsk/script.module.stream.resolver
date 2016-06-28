@@ -81,9 +81,12 @@ def request(url, headers={}):
     debug('request: %s' % url)
     req = urllib2.Request(url, headers=headers)
     req.add_header('User-Agent', UA)
-    response = urllib2.urlopen(req)
-    data = response.read()
-    response.close()
+    try:
+        response = urllib2.urlopen(req)
+        data = response.read()
+        response.close()
+    except urllib2.HTTPError, error:
+        data=error.read() 
     debug('len(data) %s' % len(data))
     return data
 
@@ -92,9 +95,12 @@ def post(url, data, headers={}):
     postdata = urllib.urlencode(data)
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
-    response = urllib2.urlopen(req)
-    data = response.read()
-    response.close()
+    try:
+        response = urllib2.urlopen(req)
+        data = response.read()
+        response.close()
+    except urllib2.HTTPError, error:
+        data=error.read() 
     return data
 
 
