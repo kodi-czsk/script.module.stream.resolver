@@ -15,16 +15,14 @@ def supports(url):
 
 # returns the steam url
 def url(url):
-	#if supports(url):
 	m = _regex(url)
 	if not m == None:
 		ur = m.group('url')
 		if ur.find('.flv') > -1:
 			return [ur]
-		data = util.substr(util.request(ur),'<body style','</a>')
-		pattern = 'href=\"(.+?)\"[^>]+>' 
-		match = re.compile(pattern).findall(data)
-		return [match[0]]
+                page = util.parse_html(ur)
+                data = page.select('source[type=video/mp4]')[0]['src']
+		return ['http://nahnoji.cz'+data]
 
 def resolve(u):
 	stream = url(u)
