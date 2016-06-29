@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+	<string id="200">Vyžaduje sa prepísanie kódu na obrázku</string>
+	<string id="201">Čakajte...</string>
+	<string id="30003">[B]Vyhľadať[/B]</string>
+	<string id="30004">[B]Nové hľadanie[/B]</string>
+	<string id="30005">Vyberte zdroj</string>
+	<string id="30006">[B]Stiahnuté súbory[/B]</string>
+	<string id="30007">[B]Ďalšie[/B]</string>
+	<string id="30008">[B]Predchádzajúce[/B]</string>
+	<string id="30009">Nastavte prosím priečinok pre sťahovania</string>
+	<string id="30010">Chcete pre stiahnutie súboru použiť VIP účet?</string>
+	<string id="30011">Prihlásenie sa nepodarilo, skontrolujte nastavenia</string>
+	<string id="30012">[B]Najnovšie videá[/B]</string>
+	<string id="30013">[B]Najsledovanejšie videá[/B]</string>
+	<string id="30014">Čakanie na súbor %ss</string>
+  	<string id="30015">Prajete si povoliť zasielanie údajov o použití?</string>
+  	<string id="30016">Hľadať podobné</string>
+</strings>
