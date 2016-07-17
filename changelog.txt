@@ -1,3 +1,6 @@
+[B]1.6.40:[/B]
+- add on_init hook to ContentProvider
+- fix hqq & nahnoji parsers, added sk translations (jose1711)
 [B]1.6.39:[/B]
 - Fixed Exashare, Openload and Youwatch resolvers
 - New resolver for Videram
