@@ -65,6 +65,14 @@ class ContentProvider(object):
     def __str__(self):
         return 'ContentProvider' + self.name
 
+    def on_init(self):
+        """
+        This function gets called by XbmcContentProvider after it initializes itself
+        and sets eveything up (especially 'lang' property of ContentProvider which gets detected
+        from kodi)
+        """
+        pass
+
     def capabilities(self):
         """
         This way class defines which capabilities it provides ['login','search','resolve','categories']

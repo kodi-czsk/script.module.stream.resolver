@@ -49,6 +49,7 @@ class XBMContentProvider(object):
         if '!download' not in self.provider.capabilities():
             self.check_setting_keys(['downloads'])
         self.cache = provider.cache
+        provider.on_init()
 
     def check_setting_keys(self,keys):
         for key in keys:
