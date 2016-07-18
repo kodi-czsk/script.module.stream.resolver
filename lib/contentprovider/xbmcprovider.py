@@ -168,8 +168,9 @@ class XBMContentProvider(object):
         if stream:
             xbmcutil.reportUsage(self.addon_id,self.addon_id+'/play')
             if 'headers' in stream.keys():
-                for header in stream['headers']:
-                    stream['url'] += '|%s=%s' % (header,stream['headers'][header])
+                headerStr = '|'+urllib.urlencode(stream['headers'])
+                if len(headerStr) > 1:
+                    stream['url'] += headerStr
             print 'Sending %s to player' % stream['url']
             li = xbmcgui.ListItem(path=stream['url'],iconImage='DefaulVideo.png')
             il = self._extract_infolabels(item['info'])
