@@ -50,7 +50,7 @@ def resolve(url):
         '.myvi.ru']['/']['UniversalUserID']
     for f in playlist['video']:
         streamurl = f['url']
-        streamurl += '|Cookie=' + 'UniversalUserID%3D' + uuid.value)
+        streamurl += '|Cookie=UniversalUserID%3D' + urllib.quote(uuid.value)
         streamurl += '&User-Agent=' + UA
         result.append({'url': streamurl})
     if result:
