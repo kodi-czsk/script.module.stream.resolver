@@ -138,7 +138,7 @@ def add_video(name, params={}, logo='', infoLabels={}, menuItems={}):
     li = xbmcgui.ListItem(name, path=url, iconImage='DefaultVideo.png', thumbnailImage=logo)
     li.setInfo(type='Video', infoLabels=infoLabels)
     li.setProperty('IsPlayable', 'true')
-    items = []
+    items = [(xbmc.getLocalizedString(13347), 'Action(Queue)')]
     for mi in menuItems.keys():
         action = menuItems[mi]
         if not type(action) == type({}):
