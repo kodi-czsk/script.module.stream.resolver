@@ -18,13 +18,15 @@ def supports(url):
 def resolve(url):
     m = _regex(url)
     if m:
+        util.init_urllib()
         data = util.request(url)
         if data.find('Toto video neexistuje') > 0:
             util.error('Video bylo smazano ze serveru')
             return
         player = 'http://www.streamuj.tv/new-flash-player/mplugin4.swf'
         headers = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0',
-                    'Referer':'http://www.streamuj.tv/mediaplayer/player.swf'}
+                    'Referer':'http://www.streamuj.tv/mediaplayer/player.swf',
+                    'Cookie':','.join("%s=%s"%(c.name, c.value) for c in util._cookie_jar)}
         burl = b64decode('aHR0cDovL2Z1LWNlY2gucmhjbG91ZC5jb20vcGF1dGg=')
         key = util.request('http://www.streamuj.tv/_key.php?auth=3C27f5wk6qB3g7nZ5SDYf7P7k1572rFH1QxV0QQ')
         index = 0

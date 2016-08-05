@@ -52,7 +52,9 @@ def init_urllib():
     urllib2.install_opener(opener)
 
 
-def request(url, headers={}):
+def request(url, headers=None):
+    if headers is None:
+        headers = {}
     debug('request: %s' % url)
     req = urllib2.Request(url, headers=headers)
     response = urllib2.urlopen(req)
@@ -185,24 +187,24 @@ def init_usage_reporting(addonid):
     utmain.main({'do': 'reg', 'id': addonid})
 
 
-def save_to_file(url, file):
+def save_to_file(url, file, headers=None):
     try:
         f = open(compat_path(file), 'w')
-        f.write(request(url))
+        f.write(request(url, headers))
         f.close()
         return True
     except:
         traceback.print_exc()
 
 
-def load_subtitles(url):
+def load_subtitles(url, headers):
     if not (url == '' or url == None):
         local = xbmc.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
         c_local = compat_path(local)
         if not os.path.exists(c_local):
             os.makedirs(c_local)
         local = os.path.join(local, 'xbmc_subs' + str(int(time.time())) + '.srt')
-        if not save_to_file(url, local):
+        if not save_to_file(url, local, headers):
             return
         player = xbmc.Player()
         count = 0
