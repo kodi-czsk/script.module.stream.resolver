@@ -155,7 +155,7 @@ class XBMContentProvider(object):
             # clean up \ and /
             name = item['title'].replace('/','_').replace('\\','_')
             if not stream['subs'] == '':
-                util.save_to_file(stream['subs'],os.path.join(downloads,name+'.srt'))
+                util.save_to_file(stream['subs'],os.path.join(downloads,name+'.srt'), stream['headers'])
             dot = name.find('.')
             if dot <= 0:
                 # name does not contain extension, append some
@@ -179,7 +179,7 @@ class XBMContentProvider(object):
             xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
             if 'subs' in self.settings.keys():
                 if self.settings['subs'] == True:
-                    xbmcutil.load_subtitles(stream['subs'])
+                    xbmcutil.load_subtitles(stream['subs'], stream['headers'])
             else: # optional setting - plugin may not supply it
                 xbmcutil.load_subtitles(stream['subs'])
 
