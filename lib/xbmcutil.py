@@ -197,7 +197,7 @@ def save_to_file(url, file, headers=None):
         traceback.print_exc()
 
 
-def load_subtitles(url, headers):
+def load_subtitles(url, headers=None):
     if not (url == '' or url == None):
         local = xbmc.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
         c_local = compat_path(local)
