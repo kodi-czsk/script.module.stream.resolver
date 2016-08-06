@@ -181,7 +181,7 @@ class XBMContentProvider(object):
                 if self.settings['subs'] == True:
                     xbmcutil.load_subtitles(stream['subs'], stream['headers'])
             else: # optional setting - plugin may not supply it
-                xbmcutil.load_subtitles(stream['subs'])
+                xbmcutil.load_subtitles(stream['subs'], stream['headers'])
 
     def _handle_exc(self,e):
         msg = e.message
