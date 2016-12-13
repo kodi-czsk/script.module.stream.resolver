@@ -43,6 +43,10 @@ class XBMContentProvider(object):
             provider.lang = None
             pass
         self.settings = settings
+        # lang setting is optional for plugins
+        if not 'lang' in self.settings:
+            self.settings['lang'] = '0'
+
         util.info('Initializing provider %s with settings %s'%(provider.name,settings))
         self.addon = addon
         self.addon_id = addon.getAddonInfo('id')
@@ -305,16 +309,22 @@ class XBMCMultiResolverContentProvider(XBMContentProvider):
         item = self.provider.video_item()
         item.update({'url':url})
         def select_cb(resolved):
+
             quality = self.settings['quality'] or '0'
-            resolved = resolver.filter_by_quality(resolved,quality)
+            filtered = resolver.filter_by_quality(resolved,quality)
+            lang = self.settings['lang'] or '0'
+            filtered = resolver.filter_by_language(filtered, lang)
             # if user requested something but 'ask me' or filtered result is exactly 1
-            if len(resolved) == 1 or int(quality) > 0:
-                return resolved[0]
+            if len(filtered) == 1 or (int(quality) > 0 and int(lang) == 0):
+                return filtered[0]
+            # if user requested particular language and we have it
+            if len(filtered) > 0 and int(lang) > 0:
+                return filtered[0]
             dialog = xbmcgui.Dialog()
             opts = []
             for r in resolved:
                 d = defaultdict(lambda:'',r)
-                opts.append('%s [%s]%s' % (d['title'],d['quality'],d['lang']))
+                opts.append('%s [%s] %s' % (d['title'],d['quality'],d['lang']))
             ret = dialog.select(xbmcutil.__lang__(30005), opts)
             if ret >= 0:
                 return resolved[ret]

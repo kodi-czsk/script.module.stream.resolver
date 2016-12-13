@@ -85,7 +85,7 @@ class ContentProvider(object):
         Returns empty video item - contains all required fields
         """
         return {'type': 'video', 'title': '', 'rating': 0, 'year': 0, 'size': '0MB', 'url': url, 'img': img,
-                'length': '', 'quality': quality, 'subs': '', 'surl': ''}
+                'length': '', 'quality': quality, 'subs': '', 'surl': '', 'lang': ''}
 
     def dir_item(self, title='', url='', type='dir'):
         """

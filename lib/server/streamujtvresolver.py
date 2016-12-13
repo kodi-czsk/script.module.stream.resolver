@@ -41,7 +41,7 @@ def resolve(url):
         for lang in languages:
             streams = re.search('res'+str(index)+'\:[^\"]*\"([^\"]+)',data,re.IGNORECASE|re.DOTALL)
             subs = re.search('sub'+str(index)+'\:[^\"]*\"([^\"]+)',data,re.IGNORECASE|re.DOTALL)
-            if subs: 
+            if subs:
                 subs = re.search('[^>]+>([^$]+)',subs.group(1),re.IGNORECASE|re.DOTALL)
             if streams and qualities:
                 streams = streams.group(1).split(',')
@@ -55,7 +55,7 @@ def resolve(url):
                         q = '720p'
                     else:
                         q = 'SD'
-                    l = ' '+lang
+                    l = ''+lang
                     if subs:
                         l += ' + subs'
                         s = subs.group(1)

@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # *      Copyright (C) 2011 Libor Zoubek
 # *
 # *
@@ -226,6 +227,20 @@ def filter_by_quality(resolved, q):
         ret.reverse()
     return ret
 
+def filter_by_language(resolved, lang):
+    util.info('filtering by language setting ' + lang)
+    if lang == '0':
+        return resolved
+    ret = []
+    # first group streams by source url
+    for item in resolved:
+        if 'lang' in item and item['lang'] != '':
+            util.info(item)
+            if lang == '1' and re.match('en', item['lang'], re.IGNORECASE):
+                ret.append(item)
+            if lang == '2' and re.match('cs|cz|čeština', item['lang'], re.IGNORECASE):
+                ret.append(item)
+    return ret
 
 def findstreams_multi(data, regexes):
     """
