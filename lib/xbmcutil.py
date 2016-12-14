@@ -191,6 +191,8 @@ def save_to_file(url, file, headers=None):
     try:
         f = open(compat_path(file), 'w')
         f.write(request(url, headers))
+        f.flush()
+        os.fsync(f.fileno())
         f.close()
         return True
     except:
@@ -198,13 +200,16 @@ def save_to_file(url, file, headers=None):
 
 
 def load_subtitles(url, headers=None):
+    util.info('Downloading subtitles and load them to player...')
     if not (url == '' or url == None):
         local = xbmc.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
         c_local = compat_path(local)
         if not os.path.exists(c_local):
             os.makedirs(c_local)
         local = os.path.join(local, 'xbmc_subs' + str(int(time.time())) + '.srt')
+        util.info('Saving subtitles as %s' % local)
         if not save_to_file(url, local, headers):
+            util.error('Failed to store subtitles!')
             return
         player = xbmc.Player()
         count = 0
@@ -213,9 +218,10 @@ def load_subtitles(url, headers=None):
             count += 1
             xbmc.sleep(200)
             if count > max_count - 2:
-                util.debug("Cannot load subtitles, player timed out")
+                util.info("Cannot load subtitles, player timed out")
                 return
         player.setSubtitles(local.encode('utf-8'))
+        util.info('Subtitles loaded to player')
 
 
 def _substitute_entity(match):
