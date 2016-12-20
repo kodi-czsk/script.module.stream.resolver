@@ -139,6 +139,8 @@ def add_video(name, params={}, logo='', infoLabels={}, menuItems={}):
     url = _create_plugin_url(params)
     li = xbmcgui.ListItem(name, path=url, iconImage='DefaultVideo.png', thumbnailImage=logo)
     li.setInfo(type='Video', infoLabels=infoLabels)
+    # remove WARNING: XFILE::CFileFactory::CreateLoader - unsupported protocol(plugin) in plugin://....
+    li.addStreamInfo('video', {})
     li.setProperty('IsPlayable', 'true')
     items = [(xbmc.getLocalizedString(13347), 'Action(Queue)')]
     for mi in menuItems.keys():
