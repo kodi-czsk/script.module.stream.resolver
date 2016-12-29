@@ -39,10 +39,8 @@ def resolve(url):
         result = []
         qualities = re.search(r'rn\:[^\"]*\"([^\"]*)', data, re.IGNORECASE | re.DOTALL)
         langs = re.search(r'langs\:[^\"]*\"([^\"]+)', data, re.IGNORECASE | re.DOTALL)
-        languages = []
-        if not langs:
-            languages = ['']  # pretend there is at least language so we read 1st stream info
-        else:
+        languages = ['']  # pretend there is at least language so we read 1st stream info
+        if langs:
             languages = langs.group(1).split(',')
         for language in languages:
             streams = re.search(r'res{index}\:[^\"]*\"([^\"]+)'.format(index=index),
@@ -65,27 +63,20 @@ def resolve(url):
                         q = '720p'
                     else:
                         q = 'SD'
-                    lang = '' + language
+                    item = {
+                        'url': stream,
+                        'quality': q,
+                        'headers': headers,
+                        'lang': language
+                    }
                     if subs:
-                        lang += ' + subs'
                         s = subs.group(1)
                         s = json.loads(util.post_json(burl, {
                             'link': s, 'player': player, 'key': key
                         }))
-                        result.append({
-                            'url': stream,
-                            'quality': q,
-                            'subs': s['link'],
-                            'headers': headers,
-                            'lang': lang
-                        })
-                    else:
-                        result.append({
-                            'url': stream,
-                            'quality': q,
-                            'headers': headers,
-                            'lang': lang
-                        })
+                        item['lang'] += ' + subs'
+                        item['subs'] = s['link']
+                    result.append(item)
                     qindex += 1
             index += 1
         return result
