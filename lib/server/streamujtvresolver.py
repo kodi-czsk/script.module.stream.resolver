@@ -28,7 +28,7 @@ def resolve(url):
             return
         player = 'http://www.streamuj.tv/new-flash-player/mplugin4.swf'
         headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0',
+            'User-Agent': util.UA,
             'Referer': 'http://www.streamuj.tv/mediaplayer/player.swf',
             'Cookie': ','.join("%s=%s" % (c.name, c.value) for c in util._cookie_jar)
         }
