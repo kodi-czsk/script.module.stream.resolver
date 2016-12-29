@@ -6,15 +6,18 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re,util
+import re
+import util
 import simplejson as json
 from base64 import b64decode, b64encode
 
-__name__='streamujtv'
-def supports(url):
-    return not _regex(url) == None
+__name__ = 'streamujtv'
 
-# returns the steam url
+
+def supports(url):
+    return _regex(url) is not None
+
+
 def resolve(url):
     m = _regex(url)
     if m:
@@ -24,49 +27,69 @@ def resolve(url):
             util.error('Video bylo smazano ze serveru')
             return
         player = 'http://www.streamuj.tv/new-flash-player/mplugin4.swf'
-        headers = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0',
-                    'Referer':'http://www.streamuj.tv/mediaplayer/player.swf',
-                    'Cookie':','.join("%s=%s"%(c.name, c.value) for c in util._cookie_jar)}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0',
+            'Referer': 'http://www.streamuj.tv/mediaplayer/player.swf',
+            'Cookie': ','.join("%s=%s" % (c.name, c.value) for c in util._cookie_jar)
+        }
         burl = b64decode('aHR0cDovL2Z1LWNlY2gucmhjbG91ZC5jb20vcGF1dGg=')
-        key = util.request('http://www.streamuj.tv/_key.php?auth=3C27f5wk6qB3g7nZ5SDYf7P7k1572rFH1QxV0QQ')
+        key = util.request(
+            'http://www.streamuj.tv/_key.php?auth=3C27f5wk6qB3g7nZ5SDYf7P7k1572rFH1QxV0QQ')
         index = 0
         result = []
-        qualities = re.search('rn\:[^\"]*\"([^\"]*)',data,re.IGNORECASE|re.DOTALL)
-        langs = re.search('langs\:[^\"]*\"([^\"]+)',data,re.IGNORECASE|re.DOTALL)
+        qualities = re.search(r'rn\:[^\"]*\"([^\"]*)', data, re.IGNORECASE | re.DOTALL)
+        langs = re.search(r'langs\:[^\"]*\"([^\"]+)', data, re.IGNORECASE | re.DOTALL)
         languages = []
         if not langs:
-            languages = [''] # pretend there is at least language so we read 1st stream info
+            languages = ['']  # pretend there is at least language so we read 1st stream info
         else:
             languages = langs.group(1).split(',')
-        for lang in languages:
-            streams = re.search('res'+str(index)+'\:[^\"]*\"([^\"]+)',data,re.IGNORECASE|re.DOTALL)
-            subs = re.search('sub'+str(index)+'\:[^\"]*\"([^\"]+)',data,re.IGNORECASE|re.DOTALL)
+        for language in languages:
+            streams = re.search(r'res{index}\:[^\"]*\"([^\"]+)'.format(index=index),
+                                data, re.IGNORECASE | re.DOTALL)
+            subs = re.search(r'sub{index}\:[^\"]*\"([^\"]+)'.format(index=index),
+                             data, re.IGNORECASE | re.DOTALL)
             if subs:
-                subs = re.search('[^>]+>([^$]+)',subs.group(1),re.IGNORECASE|re.DOTALL)
+                subs = re.search(r'[^>]+>([^$]+)', subs.group(1), re.IGNORECASE | re.DOTALL)
             if streams and qualities:
                 streams = streams.group(1).split(',')
                 rn = qualities.group(1).split(',')
                 qindex = 0
                 for stream in streams:
-                    res = json.loads(util.post_json(burl,{'link':stream,'player':player,'key':key}))
+                    res = json.loads(util.post_json(burl, {
+                        'link': stream, 'player': player, 'key': key
+                    }))
                     stream = res['link']
                     q = rn[qindex]
                     if q == 'HD':
                         q = '720p'
                     else:
                         q = 'SD'
-                    l = ''+lang
+                    lang = '' + language
                     if subs:
-                        l += ' + subs'
+                        lang += ' + subs'
                         s = subs.group(1)
-                        s = json.loads(util.post_json(burl,{'link':s,'player':player, 'key':key}))
-                        result.append({'url':stream,'quality':q,'subs':s['link'],'headers':headers,'lang':l})
+                        s = json.loads(util.post_json(burl, {
+                            'link': s, 'player': player, 'key': key
+                        }))
+                        result.append({
+                            'url': stream,
+                            'quality': q,
+                            'subs': s['link'],
+                            'headers': headers,
+                            'lang': lang
+                        })
                     else:
-                        result.append({'url':stream,'quality':q,'headers':headers, 'lang':l})
-                    qindex+=1
-            index+=1
+                        result.append({
+                            'url': stream,
+                            'quality': q,
+                            'headers': headers,
+                            'lang': lang
+                        })
+                    qindex += 1
+            index += 1
         return result
 
-def _regex(url):
-    return re.search('streamuj\.tv/video/',url,re.IGNORECASE | re.DOTALL)
 
+def _regex(url):
+    return re.search(r'streamuj\.tv/video/', url, re.IGNORECASE | re.DOTALL)
