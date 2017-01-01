@@ -48,7 +48,9 @@ def resolve(url):
             subs = re.search(r'sub{index}\:[^\"]*\"([^\"]+)'.format(index=index),
                              data, re.IGNORECASE | re.DOTALL)
             if subs:
-                subs = re.search(r'[^>]+>([^$]+)', subs.group(1), re.IGNORECASE | re.DOTALL)
+                subs = re.search(r'[^>]+>([^,$]+)', subs.group(1), re.IGNORECASE | re.DOTALL)
+            else:
+                subs = None
             if streams and qualities:
                 streams = streams.group(1).split(',')
                 rn = qualities.group(1).split(',')
@@ -70,12 +72,16 @@ def resolve(url):
                         'lang': language
                     }
                     if subs:
-                        s = subs.group(1)
-                        s = json.loads(util.post_json(burl, {
-                            'link': s, 'player': player, 'key': key
+                        link = subs.group(1)
+                        response = json.loads(util.post_json(burl, {
+                            'link': link, 'player': player, 'key': key
                         }))
-                        item['lang'] += ' + subs'
-                        item['subs'] = s['link']
+                        if 'link' in response:
+                            item['lang'] += ' + subs'
+                            item['subs'] = response[u'link']
+                        else:
+                            util.error("Could not fetch subtitles from '{}'".format(link))
+                            util.error("Server response: {}".format(response))
                     result.append(item)
                     qindex += 1
             index += 1
