@@ -180,6 +180,15 @@ class XBMContentProvider(object):
             il = self._extract_infolabels(item['info'])
             if len(il) > 0: #only set when something was extracted
                 li.setInfo('video',il)
+            # new art handling from Jarvis - begin
+            if 'art' in item['info'].keys():
+                if 'poster' in item['info']['art'].keys():
+                    # movie
+                    li.setArt({'thumb' :item['info']['art']['poster']})
+                elif 'thumb' in item['info']['art'].keys():
+                    # tv serie
+                    li.setArt({'thumb' :item['info']['art']['thumb']})
+            # new art handling from Jarvis - end
             xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
             if 'subs' in self.settings.keys():
                 if self.settings['subs'] == True:
