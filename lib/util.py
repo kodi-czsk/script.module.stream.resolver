@@ -34,6 +34,7 @@ import string
 import simplejson as json
 from demjson import demjson
 from bs4 import BeautifulSoup
+import cloudflare
 
 UA = 'Mozilla/6.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/2008092417 Firefox/3.0.3'
 LOG = 2
@@ -78,6 +79,7 @@ def cache_cookies(cache):
 
 
 def request(url, headers={}):
+    global _cookie_jar
     debug('request: %s' % url)
     req = urllib2.Request(url, headers=headers)
     req.add_header('User-Agent', UA)
@@ -87,12 +89,15 @@ def request(url, headers={}):
         response.close()
     except urllib2.HTTPError, error:
         data=error.read() 
+        if error.code == 503 and 'cf-browser-verification' in data:
+            data = cloudflare.solve(url, _cookie_jar, UA)
         error.close()
     debug('len(data) %s' % len(data))
     return data
 
 
 def post(url, data, headers={}):
+    global _cookie_jar
     postdata = urllib.urlencode(data)
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
@@ -102,6 +107,8 @@ def post(url, data, headers={}):
         response.close()
     except urllib2.HTTPError, error:
         data=error.read() 
+        if error.code == 503 and 'cf-browser-verification' in data:
+            data = cloudflare.solve(url, _cookie_jar, UA)
         error.close()
     return data
 
@@ -111,9 +118,15 @@ def post_json(url, data, headers={}):
     headers['Content-Type'] = 'application/json'
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
-    response = urllib2.urlopen(req)
-    data = response.read()
-    response.close()
+    try:
+        response = urllib2.urlopen(req)
+        data = response.read()
+        response.close()
+    except urllib2.HTTPError, error:
+        data=error.read() 
+        if error.code == 503 and 'cf-browser-verification' in data:
+            data = cloudflare.solve(url, _cookie_jar, UA)
+        error.close()
     return data
 
 
