@@ -90,7 +90,8 @@ def request(url, headers={}):
     debug('request: %s' % url)
     req = urllib2.Request(url, headers=headers)
     req.add_header('User-Agent', UA)
-    _cookie_jar.add_cookie_header(req)
+    if _cookie_jar is not None:
+        _cookie_jar.add_cookie_header(req)
     try:
         response = urllib2.urlopen(req)
         data = response.read()
@@ -109,7 +110,8 @@ def post(url, data, headers={}):
     postdata = urllib.urlencode(data)
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
-    _cookie_jar.add_cookie_header(req)
+    if _cookie_jar is not None:
+        _cookie_jar.add_cookie_header(req)
     try:
         response = urllib2.urlopen(req)
         data = response.read()
@@ -128,7 +130,8 @@ def post_json(url, data, headers={}):
     headers['Content-Type'] = 'application/json'
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
-    _cookie_jar.add_cookie_header(req)
+    if _cookie_jar is not None:
+        _cookie_jar.add_cookie_header(req)
     try:
         response = urllib2.urlopen(req)
         data = response.read()
