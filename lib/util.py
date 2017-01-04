@@ -47,7 +47,10 @@ CACHE_COOKIES = 'cookies'
 
 class _StringCookieJar(cookielib.LWPCookieJar):
 
-    def __init__(self, string=None, filename=None, delayload=False, policy=None):
+    def __init__(self, string=None, filename=None, delayload=False, policy=None, cache=None):
+        self.cache = None
+        if cache is not None:
+            self.cache = cache
         cookielib.LWPCookieJar.__init__(self, filename, delayload, policy)
         if string and len(string) > 0:
             self._cookies = pickle.loads(str(string))
@@ -64,18 +67,22 @@ def init_urllib(cache=None):
     data = None
     if cache is not None:
         data = cache.get(CACHE_COOKIES)
-    _cookie_jar = _StringCookieJar(data)
+        _cookie_jar = _StringCookieJar(data, cache=cache)
+    else:
+        _cookie_jar = _StringCookieJar(data)
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cookie_jar))
     urllib2.install_opener(opener)
 
 
-def cache_cookies(cache):
+def cache_cookies(cache=None):
     """
     Saves cookies to cache
     """
     global _cookie_jar
-    if _cookie_jar:
+    if _cookie_jar and cache is not None:
         cache.set(CACHE_COOKIES, _cookie_jar.dump())
+    else:
+        _cookie_jar.cache.set(CACHE_COOKIES, _cookie_jar.dump())
 
 
 def request(url, headers={}):
@@ -83,6 +90,7 @@ def request(url, headers={}):
     debug('request: %s' % url)
     req = urllib2.Request(url, headers=headers)
     req.add_header('User-Agent', UA)
+    _cookie_jar.add_cookie_header(req)
     try:
         response = urllib2.urlopen(req)
         data = response.read()
@@ -101,6 +109,7 @@ def post(url, data, headers={}):
     postdata = urllib.urlencode(data)
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
+    _cookie_jar.add_cookie_header(req)
     try:
         response = urllib2.urlopen(req)
         data = response.read()
@@ -114,10 +123,12 @@ def post(url, data, headers={}):
 
 
 def post_json(url, data, headers={}):
+    global _cookie_jar
     postdata = json.dumps(data)
     headers['Content-Type'] = 'application/json'
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
+    _cookie_jar.add_cookie_header(req)
     try:
         response = urllib2.urlopen(req)
         data = response.read()
