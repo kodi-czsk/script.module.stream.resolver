@@ -1,3 +1,6 @@
+[B]1.6.48:[/B]
+- fixed video download code which was failing when there were subtitles to
+download
 [B]1.6.45:[/B]
 - support for filtering by language (needs to be passed by addon as 'lang' setting)
 [B]1.6.40:[/B]
