@@ -20,6 +20,7 @@ import urllib
 
 __name__ = 'hqq'
 
+_pattern_ = r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)"
 
 def supports(url):
     return _regex(url) is not None
@@ -135,7 +136,6 @@ def _decode3(w, i, s, e):
         var3 += 1
         if (len(w) + len(i) + len(s) + len(e) == len(var4) + len(var5) + len(e)):
             break
-
     var6 = ''.join(var4)
     var7 = ''.join(var5)
     var2 = 0
@@ -148,15 +148,11 @@ def _decode3(w, i, s, e):
         var2 += 1
         if (var2 >= len(var5)):
             var2 = 0
-
     return ''.join(result)
 
-
-def _decode4(w, i, s, e):
-    for s in range(0, len(w), 2):
-        i += chr(int(w[s:s + 2], 36))
-    return i
-
+def _decode_data(data):
+    values = re.search(_pattern_, data, re.DOTALL)
+    return _decode3(values.group(1), values.group(2), values.group(3), values.group(4))
 
 def resolve(url):
     m = _regex(url)
@@ -164,81 +160,36 @@ def resolve(url):
         vid = m.group('vid')
         headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                    'Content-Type': 'text/html; charset=utf-8'}
+
         player_url = "http://hqq.tv/player/embed_player.php?vid=%s&autoplay=no" % vid
         data = util.request(player_url, headers)
-        values = re.search(r";}\('(\w+)','(\w+)','(\w+)','(\w+)'\)\)", data, re.DOTALL)
 
-        if values:
-            nextCode = _decode3(values.group(1), values.group(2), values.group(3), values.group(4))
-            # xbmc.log("DECODED :" + nextCode)
-            values = re.search(r";}\('(\w+)','(\w+)','(\w+)','(\w+)'\)\)", nextCode, re.DOTALL)
-            nextCode = _decode3(values.group(1), values.group(2), values.group(3), values.group(4))
-            # xbmc.log("NEXT :" + nextCode)
+        data = _decode_data(data)
+        data = _decode_data(data)
+        blocs = data.split(';; ')
+        data = _decode_data(blocs[1])
 
-            # We have found two functions to decode:
-            blocs = nextCode.split(';; ')
-            # function 1
-            values = re.search(r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)", blocs[0], re.DOTALL)
-            nextCode1 = _decode4(values.group(1), values.group(2), values.group(3), values.group(4))
-            # function 2
-            values = re.search(r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)", blocs[1], re.DOTALL)
-            nextCode2 = _decode3(values.group(1), values.group(2), values.group(3), values.group(4))
+        jsonInfo = util.request("http://hqq.tv/player/ip.php?type=json", headers)
+        jsonIp = json.loads(jsonInfo)['ip']
+        at = re.search(r'at = "(\w+)";', data, re.DOTALL)
+        if jsonIp and at:
+            get_data = {'iss': jsonIp, 'vid': vid, 'at': at.group(1), 'autoplayed': 'yes', 'referer': 'on',
+                        'http_referer': '', 'pass': '', 'embed_from' : '', 'need_captcha' : '0' }
 
-            # function 1 has two other functions
-            # xbmc.log("NEXT function 1 :" + nextCode1)
-            blocs = nextCode1.split(';;')
-            # function 11
-            values = re.search(r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)", blocs[0], re.DOTALL)
-            nextCode11 = _decode4(values.group(1), values.group(2), values.group(3), values.group(4))
-            # function 12
-            values = re.search(r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)", blocs[1], re.DOTALL)
-            nextCode12 = _decode4(values.group(1), values.group(2), values.group(3), values.group(4))
-
-            # function 11 decoding:
-            values = re.search(r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)", nextCode11, re.DOTALL)
-            if values:
-                # xbmc.log("NEXT function 11 :" + nextCode11)
-                nextCode111 = _decode4(values.group(1), values.group(2), values.group(3), values.group(4))
-                # xbmc.log("NEXT function 111 :" + nextCode111)
-            else:
-                # function 12 decoding:
-                values = re.search(r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)", nextCode12, re.DOTALL)
-                # xbmc.log("NEXT function 12 :" + nextCode12)
-                nextCode121 = _decode4(values.group(1), values.group(2), values.group(3), values.group(4))
-                # xbmc.log("NEXT function 121 :" + nextCode121)
-
-                #### NOTE:
-                # During this fix, this previous function 1 thing decoded nothing.
-                # But I leave it there in case they decide to put a key in this mess!
-
-                # Function 2 is the main code
-            # xbmc.log("NEXT Function 2 :" + nextCode2)
-            data = util.request("http://hqq.tv/player/ip.php?type=json", headers)
-            jsonIp = json.loads(data)
-
-            at = re.search(r'at = "(\w+)";', nextCode2, re.DOTALL)
-            url = "http://hqq.tv/sec/player/embed_player.php?iss=" + jsonIp['ip'] + "&vid=" + vid + "&at=" + \
-                  at.group(1) + "&autoplayed=yes&referer=on&http_referer=&pass=&embed_from=&need_captcha=0"
-            data = urllib.unquote(util.request(url, headers))
+            data = urllib.unquote(util.request("http://hqq.tv/sec/player/embed_player.php?" +
+                                               urllib.urlencode(get_data), headers))
 
             l = re.search(r'link_1: ([a-zA-Z]+), server_1: ([a-zA-Z]+)', data)
-
             vid_server = re.search(r'var ' + l.group(2) + ' = "([^"]+)"', data).group(1)
             vid_link = re.search(r'var ' + l.group(1) + ' = "([^"]+)"', data).group(1)
-            at = re.search(r'var\s*at\s*=\s*"([^"]*?)"', data)
-            if vid_server and vid_link and at:
-                get_data = {'server_1': vid_server,
-                            'link_1': vid_link,
-                            'at': at.group(1),
-                            'adb': '0/',
-                            'b': '1',
-                            'vid': vid
-                            }
+
+            if vid_server and vid_link:
+                get_data = {'server_1': vid_server, 'link_1': vid_link, 'at': at.group(1), 'adb': '0/',
+                            'b': '1', 'vid': vid }
                 headers['x-requested-with'] = 'XMLHttpRequest'
-                data = util.request("http://hqq.tv/player/get_md5.php?" + \
-                                    urllib.urlencode(get_data), headers)
-                jsondata = json.loads(data)
-                encodedm3u = jsondata['file']
+                data = util.request("http://hqq.tv/player/get_md5.php?" + urllib.urlencode(get_data), headers)
+                jsonData = json.loads(data)
+                encodedm3u = jsonData['file']
                 decodedm3u = _decode2(encodedm3u.replace('\\', ''))
 
                 agent = 'User-Agent=Mozilla/5.0 (iPhone; CPU iPhone OS 5_0_1 like Mac OS X)'
