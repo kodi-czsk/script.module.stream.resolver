@@ -34,6 +34,7 @@ import string
 import simplejson as json
 from demjson import demjson
 from bs4 import BeautifulSoup
+import cloudflare
 
 UA = 'Mozilla/6.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/2008092417 Firefox/3.0.3'
 LOG = 2
@@ -46,7 +47,8 @@ CACHE_COOKIES = 'cookies'
 
 class _StringCookieJar(cookielib.LWPCookieJar):
 
-    def __init__(self, string=None, filename=None, delayload=False, policy=None):
+    def __init__(self, string=None, filename=None, delayload=False, policy=None, cache=None):
+        self.cache = cache
         cookielib.LWPCookieJar.__init__(self, filename, delayload, policy)
         if string and len(string) > 0:
             self._cookies = pickle.loads(str(string))
@@ -63,31 +65,46 @@ def init_urllib(cache=None):
     data = None
     if cache is not None:
         data = cache.get(CACHE_COOKIES)
-    _cookie_jar = _StringCookieJar(data)
+        _cookie_jar = _StringCookieJar(data, cache=cache)
+    else:
+        _cookie_jar = _StringCookieJar(data)
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cookie_jar))
     urllib2.install_opener(opener)
 
 
-def cache_cookies(cache):
+def cache_cookies(cache=None):
     """
     Saves cookies to cache
     """
     global _cookie_jar
-    if _cookie_jar:
+    if _cookie_jar and cache is not None:
         cache.set(CACHE_COOKIES, _cookie_jar.dump())
+    else:
+        try:
+            _cookie_jar.cache.set(CACHE_COOKIES, _cookie_jar.dump())
+        except:
+            pass
 
+def _solve_http_errors(url, error):
+    global _cookie_jar
+    data=error.read() 
+    if error.code == 503 and 'cf-browser-verification' in data:
+        data = cloudflare.solve(url, _cookie_jar, UA)
+    error.close()
+    return data
 
 def request(url, headers={}):
     debug('request: %s' % url)
     req = urllib2.Request(url, headers=headers)
     req.add_header('User-Agent', UA)
+    if _cookie_jar is not None:
+        _cookie_jar.add_cookie_header(req)
     try:
         response = urllib2.urlopen(req)
         data = response.read()
         response.close()
     except urllib2.HTTPError, error:
-        data=error.read() 
-        error.close()
+        data=_solve_http_errors(url, error)
     debug('len(data) %s' % len(data))
     return data
 
@@ -96,13 +113,14 @@ def post(url, data, headers={}):
     postdata = urllib.urlencode(data)
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
+    if _cookie_jar is not None:
+        _cookie_jar.add_cookie_header(req)
     try:
         response = urllib2.urlopen(req)
         data = response.read()
         response.close()
     except urllib2.HTTPError, error:
-        data=error.read() 
-        error.close()
+        data=_solve_http_errors(url, error)
     return data
 
 
@@ -111,9 +129,14 @@ def post_json(url, data, headers={}):
     headers['Content-Type'] = 'application/json'
     req = urllib2.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
-    response = urllib2.urlopen(req)
-    data = response.read()
-    response.close()
+    if _cookie_jar is not None:
+        _cookie_jar.add_cookie_header(req)
+    try:
+        response = urllib2.urlopen(req)
+        data = response.read()
+        response.close()
+    except urllib2.HTTPError, error:
+        data=_solve_http_errors(url, error)
     return data
 
 
