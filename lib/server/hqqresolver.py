@@ -20,8 +20,6 @@ import urllib
 
 __name__ = 'hqq'
 
-_pattern_ = r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)"
-
 def supports(url):
     return _regex(url) is not None
 
@@ -151,7 +149,8 @@ def _decode3(w, i, s, e):
     return ''.join(result)
 
 def _decode_data(data):
-    values = re.search(_pattern_, data, re.DOTALL)
+    valuesPattern = r";}\('(\w+)','(\w*)','(\w*)','(\w*)'\)\)"
+    values = re.search(valuesPattern, data, re.DOTALL)
     return _decode3(values.group(1), values.group(2), values.group(3), values.group(4))
 
 def resolve(url):
