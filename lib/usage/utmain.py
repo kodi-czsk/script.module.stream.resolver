@@ -19,17 +19,27 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import os,re,sys,urllib,urllib2,traceback,cookielib
-import xbmc,xbmcaddon,xbmcgui
+import os
+import re
+import sys
+import urllib
+import urllib2
+import traceback
+import cookielib
+import xbmc
+import xbmcaddon
+import xbmcgui
 
 __addon__ = xbmcaddon.Addon(id='script.module.stream.resolver')
-__   = __addon__.getLocalizedString
-import googletracker,tracker
+__ = __addon__.getLocalizedString
+import googletracker
+import tracker
+
 
 def trackUsage(params):
-    for param  in ['id','host','tc']:
+    for param in ['id', 'host', 'tc']:
         if not param in params:
-            raise Exception(param+' param is required')
+            raise Exception(param + ' param is required')
     if not 'service' in params:
         params['service'] = 'google'
     if not 'cond' in params:
@@ -49,7 +59,7 @@ def trackUsage(params):
     else:
         params['dry'] = False
 
-    xbmc.log(msg='Parsed input params %s' % (str(params)),level=xbmc.LOGDEBUG)
+    xbmc.log(msg='Parsed input params %s' % (str(params)), level=xbmc.LOGDEBUG)
 
     try:
         if not xbmcaddon.Addon(params['id']).getAddonInfo('id') == params['id']:
@@ -58,26 +68,28 @@ def trackUsage(params):
         print 'Unable to create addon instance for %s, invalid addon ID?!' % (params['id'])
         return
 
-    if register(params):		
+    if register(params):
         print 'Tracking usage ...'
         sett = tracker.TrackerSettings(__addon__)
         info = tracker.TrackerInfo().getSystemInfo()
         # retrieve per-installation-unique ID
         info['instanceid'] = sett.getInstanceID(params['service'])
         if 'google' == params['service']:
-            return googletracker.track_usage(params['host'],params['action'],params['tc'],params['dry'],info)
+            return googletracker.track_usage(params['host'], params['action'], params['tc'], params['dry'], info)
     else:
         print 'Reporting for %s disabled by user' % (params['id'])
+
 
 def register(params):
     sett = tracker.TrackerSettings(__addon__)
     enabled = sett.isReportingEnabled()
     if enabled == None:
-        ret = xbmcgui.Dialog().yesno('XBMC Doplňky',__(30015))
+        ret = xbmcgui.Dialog().yesno('KODI CZSK', __(30015))
         enabled = ret == 1
         sett.setReportingEnabled(enabled)
         sett.save()
     return enabled
+
 
 def main(p={}):
     if 'do' in p:
@@ -93,5 +105,3 @@ def main(p={}):
                     pass
             return register(p)
     trackUsage(p)
-
-
