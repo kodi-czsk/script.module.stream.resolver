@@ -139,7 +139,8 @@ def add_video(name, params={}, logo='', infoLabels={}, menuItems={}):
     url = _create_plugin_url(params)
     li = xbmcgui.ListItem(name, path=url, iconImage='DefaultVideo.png', thumbnailImage=logo)
     li.setInfo(type='Video', infoLabels=infoLabels)
-    # remove WARNING: XFILE::CFileFactory::CreateLoader - unsupported protocol(plugin) in plugin://....
+    # remove WARNING: XFILE::CFileFactory::CreateLoader - unsupported
+    # protocol(plugin) in plugin://....
     li.addStreamInfo('video', {})
     li.setProperty('IsPlayable', 'true')
     items = [(xbmc.getLocalizedString(13347), 'Action(Queue)')]
@@ -199,6 +200,22 @@ def save_to_file(url, file, headers=None):
         return True
     except:
         traceback.print_exc()
+
+
+def set_subtitles(listItem, url, headers=None):
+    if not (url == '' or url == None):
+        util.info('Downloading subtitles')
+        local = xbmc.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
+        c_local = compat_path(local)
+        if not os.path.exists(c_local):
+            os.makedirs(c_local)
+        local = os.path.join(local, 'xbmc_subs' + str(int(time.time())) + '.srt')
+        util.info('Saving subtitles as %s' % local)
+        if not save_to_file(url, local, headers):
+            util.error('Failed to store subtitles!')
+            return
+        util.info('Setting subtitles to playable item')
+        listItem.setSubtitles([local.encode('utf-8')])
 
 
 def load_subtitles(url, headers=None):

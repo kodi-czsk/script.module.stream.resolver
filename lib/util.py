@@ -85,13 +85,15 @@ def cache_cookies(cache=None):
         except:
             pass
 
+
 def _solve_http_errors(url, error):
     global _cookie_jar
-    data=error.read() 
+    data = error.read()
     if error.code == 503 and 'cf-browser-verification' in data:
         data = cloudflare.solve(url, _cookie_jar, UA)
     error.close()
     return data
+
 
 def request(url, headers={}):
     debug('request: %s' % url)
@@ -104,7 +106,7 @@ def request(url, headers={}):
         data = response.read()
         response.close()
     except urllib2.HTTPError, error:
-        data=_solve_http_errors(url, error)
+        data = _solve_http_errors(url, error)
     debug('len(data) %s' % len(data))
     return data
 
@@ -120,7 +122,7 @@ def post(url, data, headers={}):
         data = response.read()
         response.close()
     except urllib2.HTTPError, error:
-        data=_solve_http_errors(url, error)
+        data = _solve_http_errors(url, error)
     return data
 
 
@@ -136,7 +138,7 @@ def post_json(url, data, headers={}):
         data = response.read()
         response.close()
     except urllib2.HTTPError, error:
-        data=_solve_http_errors(url, error)
+        data = _solve_http_errors(url, error)
     return data
 
 
@@ -241,7 +243,7 @@ try:
         xbmc.log(str([text]), xbmc.LOGDEBUG)
 
     def info(text):
-        xbmc.log(str([text]))
+        xbmc.log(str([text]), xbmc.LOGNOTICE)
 
     def error(text):
         xbmc.log(str([text]), xbmc.LOGERROR)
