@@ -183,7 +183,6 @@ class XBMContentProvider(object):
                 stream['url']), os.path.join(downloads, name), headers=stream['headers'])
 
     def play(self, item):
-        #xbmcplugin.setResolvedUrl(int(0), True, xbmcgui.ListItem(path='/dev/null'))
         stream = self.resolve(item['url'])
         if stream:
             xbmcutil.reportUsage(self.addon_id, self.addon_id + '/play')
@@ -196,12 +195,8 @@ class XBMContentProvider(object):
             il = self._extract_infolabels(item['info'])
             if len(il) > 0:  # only set when something was extracted
                 li.setInfo('video', il)
+            local_subs = xbmcutil.set_subtitles(li, stream['subs'], stream.get('headers'))
             xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
-            if 'subs' in self.settings.keys():
-                if self.settings['subs'] == True:
-                    xbmcutil.load_subtitles(stream['subs'], stream.get('headers'))
-            else:  # optional setting - plugin may not supply it
-                xbmcutil.load_subtitles(stream['subs'], stream.get('headers'))
 
     def _handle_exc(self, e):
         msg = e.message
