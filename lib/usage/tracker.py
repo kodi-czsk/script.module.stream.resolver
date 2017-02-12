@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import simplejson as json
+import json
 import xbmc
 import os
 import random

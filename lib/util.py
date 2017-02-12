@@ -31,7 +31,7 @@ import threading
 import Queue
 import pickle
 import string
-import simplejson as json
+import json
 from demjson import demjson
 from bs4 import BeautifulSoup
 import cloudflare
