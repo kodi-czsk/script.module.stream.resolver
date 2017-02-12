@@ -173,7 +173,7 @@ decryptor = CVevoSignAlgoExtractor()
 import sys
 import urllib
 import cgi
-import simplejson as json
+import json
 
 
 class YoutubePlayer(object):

@@ -8,7 +8,7 @@
 # */
 import re
 import util
-import simplejson as json
+import json
 from base64 import b64decode, b64encode
 
 __name__ = 'streamujtv'
