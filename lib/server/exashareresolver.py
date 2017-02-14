@@ -37,17 +37,20 @@ def resolve(url):
     if data:
         data = data.group(1).decode('string_escape')
         data = re.sub(r'\w+\(([^\)]+?)\)', r'\1', data) # Strip JS functions
-        data = re.sub(r': *([^"][a-zA-Z]+)',r':"\1"', data) # Fix incorrect JSON
+        data = re.sub(r''': *([^"'{\[][a-zA-Z]+)''',r':"\1"', data) # Fix incorrect JSON
         data = demjson.decode(data)
         if 'sources' in data:
             result = []
             for source in data['sources']:           
                 if 'tracks' in data:                                                        
-                    for track in data['tracks']:                                            
-                        result.append({
+                    if data['tracks']:
+                        for track in data['tracks']:
+                            result.append({
                                        'url': source['file'],
                                       'subs': track['file'],
                                       'lang': ' %s subtitles' % track['label']
                                        })
+                    else:
+                        result=[{'url': source['file']}]
             return result
     return None
