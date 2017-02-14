@@ -235,11 +235,12 @@ def load_subtitles(url, headers=None):
         max_count = 99
         while not player.isPlaying() and count < max_count:
             count += 1
-            xbmc.sleep(200)
+            xbmc.sleep(1000)
             if count > max_count - 2:
                 util.info("Cannot load subtitles, player timed out")
                 return
         player.setSubtitles(local.encode('utf-8'))
+        player.showSubtitles(True)
         util.info('Subtitles loaded to player')
 
 
