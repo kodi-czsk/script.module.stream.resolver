@@ -17,10 +17,13 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 
+import os
 import re
-from xml.etree import ElementTree
-import util
-from copy import deepcopy
+import sys
+
+parent_dir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(parent_dir,'venom'))
+import venom_flashxresolver
 
 __name__ = 'flashx'
 
@@ -30,31 +33,10 @@ def supports(url):
 
 
 def resolve(url):
-    data = util.extract_jwplayer_setup(util.request(url))
-    if data and 'sources' in data:
-        result = []
-        for source in data['sources']:
-            items = []
-            if source['file'].endswith('.smil'):
-                tree = ElementTree.fromstring(util.request(source['file']))
-                base_path = tree.find('./head/meta').get('base')
-                for video in tree.findall('./body/switch/video'):
-                    items.append({
-                        'url': '%s playpath=%s pageUrl=%s swfUrl=%s swfVfy=true' %
-                               (base_path, video.get('src'), url,
-                                'http://static.flashx.tv/player6/jwplayer.flash.swf'),
-                        'quality': video.get('height') + 'p'
-                    })
-            else:
-                items.append({'url': source['file']})
-            if len(data['tracks']) > 0:
-                for item in items:
-                    for track in data['tracks']:
-                        new_item = deepcopy(item)
-                        new_item['subs'] = track['file']
-                        new_item['lang'] = ' %s subtitles' % track['label']
-                        result.append(new_item)
-            else:
-                result += items
-        return result
-    return None
+    hoster=venom_flashxresolver.cHoster()
+    hoster.setUrl(url)
+    status, surl = hoster.getMediaLink()
+    if status:
+        return [{'url': surl}]
+    else:
+        return None
