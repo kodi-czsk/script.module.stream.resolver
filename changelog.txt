@@ -1,3 +1,6 @@
+[B]1.6.52:[/B]
+- openload resolver now uses the new api
+  (prior in-browser pairing required)
 [B]1.6.48:[/B]
 - fixed video download code which was failing when there were subtitles to
 download
