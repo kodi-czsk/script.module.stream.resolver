@@ -13,6 +13,14 @@ from base64 import b64decode, b64encode
 
 __name__ = 'streamujtv'
 
+API_SERVER = b64decode('ZnUtY2VjaC5yaGNsb3VkLmNvbQ==')
+
+# Jo panecku, to je prasecina.
+try:
+	import xbmcaddon
+	API_SERVER = xbmcaddon.Addon(id='plugin.video.sosac.ph').getSetting('streamujtv_api_proxy') or API_SERVER
+except:
+	pass
 
 def supports(url):
     return _regex(url) is not None
@@ -32,7 +40,7 @@ def resolve(url):
             'Referer': 'http://www.streamuj.tv/mediaplayer/player.swf',
             'Cookie': ','.join("%s=%s" % (c.name, c.value) for c in util._cookie_jar)
         }
-        burl = b64decode('aHR0cDovL2Z1LWNlY2gucmhjbG91ZC5jb20vcGF1dGg=')
+        burl = 'http://' + API_SERVER + "/pauth"
         key = util.request(
             'http://www.streamuj.tv/_key.php?auth=3C27f5wk6qB3g7nZ5SDYf7P7k1572rFH1QxV0QQ')
         index = 0
