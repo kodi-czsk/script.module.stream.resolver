@@ -21,7 +21,6 @@ import re
 from xml.etree import ElementTree
 import util
 from copy import deepcopy
-import requests
 import json
 
 __name__ = 'dailymotion'
@@ -37,10 +36,9 @@ def resolve(url):
     print 'The id is ::', id
     headers = {'User-Agent': 'Android'}
     cookie = {'Cookie': "lang=en; ff=off"}
-    r = requests.get("http://www.dailymotion.com/player/metadata/video/" + id,
-                     headers=headers,
-                     cookies=cookie)
-    content = r.json()
+    r = util.request("http://www.dailymotion.com/player/metadata/video/" + id,
+                     headers)
+    content = json.loads(r)
     cc = content['qualities']
     cc = cc.items()
 
