@@ -273,7 +273,9 @@ class XBMContentProvider(object):
 
     def _extract_infolabels(self, item):
         infoLabels = {}
-        for label in ['title', 'plot', 'year', 'genre', 'rating', 'director', 'votes', 'cast', 'trailer', 'tvshowtitle', 'season', 'episode']:
+        for label in ['title', 'plot', 'year', 'genre', 'rating', 'director',
+                      'votes', 'cast', 'trailer', 'tvshowtitle', 'season',
+                      'episode', 'duration']:
             if label in item.keys():
                 infoLabels[label] = util.decode_html(item[label])
         return infoLabels

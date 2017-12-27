@@ -1,4 +1,6 @@
-[B]1.6.53:[/B]
+[B]1.6.55:[/B]
+- duration is now recognized as infolabels attribute
+[B]1.6.54:[/B]
 - add dailymotion resolver
 [B]1.6.52:[/B]
 - fix streamujtv resolver
