@@ -1,3 +1,5 @@
+[B]1.6.55:[/B]
+- recognize youtu.be scheme
 [B]1.6.53:[/B]
 - add dailymotion resolver
 [B]1.6.52:[/B]
