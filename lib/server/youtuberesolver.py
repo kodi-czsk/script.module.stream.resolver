@@ -1,67 +1,316 @@
 # -*- coding: UTF-8 -*-
+import json
+import operator
+import re
 
+#source from https://github.com/rg3/youtube-dl/blob/master/youtube_dl/utils.py
+class ExtractorError(Exception):
+    """Error during info extraction."""
+
+    def __init__(self, msg, tb=None, expected=False, cause=None, video_id=None):
+        """ tb, if given, is the original traceback (so that it can be printed out).
+        If expected is set, this is a normal error message and most likely not a bug in youtube-dl.
+        """
+
+        if sys.exc_info()[0] in (compat_urllib_error.URLError, socket.timeout, UnavailableVideoError):
+            expected = True
+        if video_id is not None:
+            msg = video_id + ': ' + msg
+        if cause:
+            msg += ' (caused by %r)' % cause
+        if not expected:
+            msg += bug_reports_message()
+        super(ExtractorError, self).__init__(msg)
+
+        self.traceback = tb
+        self.exc_info = sys.exc_info()  # preserve original exception
+        self.cause = cause
+        self.video_id = video_id
+
+    def format_traceback(self):
+        if self.traceback is None:
+            return None
+        return ''.join(traceback.format_tb(self.traceback))
+
+_OPERATORS = [
+    ('|', operator.or_),
+    ('^', operator.xor),
+    ('&', operator.and_),
+    ('>>', operator.rshift),
+    ('<<', operator.lshift),
+    ('-', operator.sub),
+    ('+', operator.add),
+    ('%', operator.mod),
+    ('/', operator.truediv),
+    ('*', operator.mul),
+]
+_ASSIGN_OPERATORS = [(op + '=', opfunc) for op, opfunc in _OPERATORS]
+_ASSIGN_OPERATORS.append(('=', lambda cur, right: right))
+
+_NAME_RE = r'[a-zA-Z_$][a-zA-Z_$0-9]*'
+
+
+# source from https://github.com/rg3/youtube-dl/blob/master/youtube_dl/jsinterp.py
+class JSInterpreter(object):
+    def __init__(self, code, objects=None):
+        if objects is None:
+            objects = {}
+        self.code = code
+        self._functions = {}
+        self._objects = objects
+
+    def remove_quotes(self, s):
+        if s is None or len(s) < 2:
+            return s
+        for quote in ('"', "'", ):
+            if s[0] == quote and s[-1] == quote:
+                return s[1:-1]
+        return s
+
+    def interpret_statement(self, stmt, local_vars, allow_recursion=100):
+        if allow_recursion < 0:
+            raise ExtractorError('Recursion limit reached')
+
+        should_abort = False
+        stmt = stmt.lstrip()
+        stmt_m = re.match(r'var\s', stmt)
+        if stmt_m:
+            expr = stmt[len(stmt_m.group(0)):]
+        else:
+            return_m = re.match(r'return(?:\s+|$)', stmt)
+            if return_m:
+                expr = stmt[len(return_m.group(0)):]
+                should_abort = True
+            else:
+                # Try interpreting it as an expression
+                expr = stmt
+
+        v = self.interpret_expression(expr, local_vars, allow_recursion)
+        return v, should_abort
+
+    def interpret_expression(self, expr, local_vars, allow_recursion):
+        expr = expr.strip()
+        if expr == '':  # Empty expression
+            return None
+
+        if expr.startswith('('):
+            parens_count = 0
+            for m in re.finditer(r'[()]', expr):
+                if m.group(0) == '(':
+                    parens_count += 1
+                else:
+                    parens_count -= 1
+                    if parens_count == 0:
+                        sub_expr = expr[1:m.start()]
+                        sub_result = self.interpret_expression(
+                            sub_expr, local_vars, allow_recursion)
+                        remaining_expr = expr[m.end():].strip()
+                        if not remaining_expr:
+                            return sub_result
+                        else:
+                            expr = json.dumps(sub_result) + remaining_expr
+                        break
+            else:
+                raise ExtractorError('Premature end of parens in %r' % expr)
+
+        for op, opfunc in _ASSIGN_OPERATORS:
+            m = re.match(r'''(?x)
+                (?P<out>%s)(?:\[(?P<index>[^\]]+?)\])?
+                \s*%s
+                (?P<expr>.*)$''' % (_NAME_RE, re.escape(op)), expr)
+            if not m:
+                continue
+            right_val = self.interpret_expression(
+                m.group('expr'), local_vars, allow_recursion - 1)
+
+            if m.groupdict().get('index'):
+                lvar = local_vars[m.group('out')]
+                idx = self.interpret_expression(
+                    m.group('index'), local_vars, allow_recursion)
+                assert isinstance(idx, int)
+                cur = lvar[idx]
+                val = opfunc(cur, right_val)
+                lvar[idx] = val
+                return val
+            else:
+                cur = local_vars.get(m.group('out'))
+                val = opfunc(cur, right_val)
+                local_vars[m.group('out')] = val
+                return val
+
+        if expr.isdigit():
+            return int(expr)
+
+        var_m = re.match(
+            r'(?!if|return|true|false)(?P<name>%s)$' % _NAME_RE,
+            expr)
+        if var_m:
+            return local_vars[var_m.group('name')]
+
+        try:
+            return json.loads(expr)
+        except ValueError:
+            pass
+
+        m = re.match(
+            r'(?P<in>%s)\[(?P<idx>.+)\]$' % _NAME_RE, expr)
+        if m:
+            val = local_vars[m.group('in')]
+            idx = self.interpret_expression(
+                m.group('idx'), local_vars, allow_recursion - 1)
+            return val[idx]
+
+        m = re.match(
+            r'(?P<var>%s)(?:\.(?P<member>[^(]+)|\[(?P<member2>[^]]+)\])\s*(?:\(+(?P<args>[^()]*)\))?$' % _NAME_RE,
+            expr)
+        if m:
+            variable = m.group('var')
+            member = self.remove_quotes(m.group('member') or m.group('member2'))
+            arg_str = m.group('args')
+
+            if variable in local_vars:
+                obj = local_vars[variable]
+            else:
+                if variable not in self._objects:
+                    self._objects[variable] = self.extract_object(variable)
+                obj = self._objects[variable]
+
+            if arg_str is None:
+                # Member access
+                if member == 'length':
+                    return len(obj)
+                return obj[member]
+
+            assert expr.endswith(')')
+            # Function call
+            if arg_str == '':
+                argvals = tuple()
+            else:
+                argvals = tuple([
+                    self.interpret_expression(v, local_vars, allow_recursion)
+                    for v in arg_str.split(',')])
+
+            if member == 'split':
+                assert argvals == ('',)
+                return list(obj)
+            if member == 'join':
+                assert len(argvals) == 1
+                return argvals[0].join(obj)
+            if member == 'reverse':
+                assert len(argvals) == 0
+                obj.reverse()
+                return obj
+            if member == 'slice':
+                assert len(argvals) == 1
+                return obj[argvals[0]:]
+            if member == 'splice':
+                assert isinstance(obj, list)
+                index, howMany = argvals
+                res = []
+                for i in range(index, min(index + howMany, len(obj))):
+                    res.append(obj.pop(index))
+                return res
+
+            return obj[member](argvals)
+
+        for op, opfunc in _OPERATORS:
+            m = re.match(r'(?P<x>.+?)%s(?P<y>.+)' % re.escape(op), expr)
+            if not m:
+                continue
+            x, abort = self.interpret_statement(
+                m.group('x'), local_vars, allow_recursion - 1)
+            if abort:
+                raise ExtractorError(
+                    'Premature left-side return of %s in %r' % (op, expr))
+            y, abort = self.interpret_statement(
+                m.group('y'), local_vars, allow_recursion - 1)
+            if abort:
+                raise ExtractorError(
+                    'Premature right-side return of %s in %r' % (op, expr))
+            return opfunc(x, y)
+
+        m = re.match(
+            r'^(?P<func>%s)\((?P<args>[a-zA-Z0-9_$,]*)\)$' % _NAME_RE, expr)
+        if m:
+            fname = m.group('func')
+            argvals = tuple([
+                int(v) if v.isdigit() else local_vars[v]
+                for v in m.group('args').split(',')]) if len(m.group('args')) > 0 else tuple()
+            if fname not in self._functions:
+                self._functions[fname] = self.extract_function(fname)
+            return self._functions[fname](argvals)
+
+        raise ExtractorError('Unsupported JS expression %r' % expr)
+
+    def extract_object(self, objname):
+        _FUNC_NAME_RE = r'''(?:[a-zA-Z$0-9]+|"[a-zA-Z$0-9]+"|'[a-zA-Z$0-9]+')'''
+        obj = {}
+        obj_m = re.search(
+            r'''(?x)
+                (?<!this\.)%s\s*=\s*{\s*
+                    (?P<fields>(%s\s*:\s*function\s*\(.*?\)\s*{.*?}(?:,\s*)?)*)
+                }\s*;
+            ''' % (re.escape(objname), _FUNC_NAME_RE),
+            self.code)
+        fields = obj_m.group('fields')
+        # Currently, it only supports function definitions
+        fields_m = re.finditer(
+            r'''(?x)
+                (?P<key>%s)\s*:\s*function\s*\((?P<args>[a-z,]+)\){(?P<code>[^}]+)}
+            ''' % _FUNC_NAME_RE,
+            fields)
+        for f in fields_m:
+            argnames = f.group('args').split(',')
+            obj[self.remove_quotes(f.group('key'))] = self.build_function(argnames, f.group('code'))
+
+        return obj
+
+    def extract_function(self, funcname):
+        func_m = re.search(
+            r'''(?x)
+                (?:function\s+%s|[{;,]\s*%s\s*=\s*function|var\s+%s\s*=\s*function)\s*
+                \((?P<args>[^)]*)\)\s*
+                \{(?P<code>[^}]+)\}''' % (
+                re.escape(funcname), re.escape(funcname), re.escape(funcname)),
+            self.code)
+        if func_m is None:
+            raise ExtractorError('Could not find JS function %r' % funcname)
+        argnames = func_m.group('args').split(',')
+
+        return self.build_function(argnames, func_m.group('code'))
+
+    def call_function(self, funcname, *args):
+        f = self.extract_function(funcname)
+        return f(args)
+
+    def build_function(self, argnames, code):
+        def resf(args):
+            local_vars = dict(zip(argnames, args))
+            for stmt in code.split(';'):
+                res, abort = self.interpret_statement(stmt, local_vars)
+                if abort:
+                    break
+            return res
+        return resf
+
+
+# inspired by https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/youtube.py
 import urllib2
-# source from https://github.com/rg3/youtube-dl/issues/1208
-# removed some unnecessary debug messages..
-class CVevoSignAlgoExtractor:
-    # MAX RECURSION Depth for security
-    MAX_REC_DEPTH = 5
+class SignatureExtractor:
 
     def __init__(self):
         self.algoCache = {}
-        self._cleanTmpVariables()
-
-    def _cleanTmpVariables(self):
-        self.fullAlgoCode = ''
-        self.allLocalFunNamesTab = []
-        self.playerData = ''
-
-    def _jsToPy(self, jsFunBody):
-        pythonFunBody = jsFunBody.replace('function', 'def').replace('{', ':\n\t').replace('}', '').replace(';', '\n\t').replace('var ', '')
-        pythonFunBody = pythonFunBody.replace('.reverse()', '[::-1]')
-
-        lines = pythonFunBody.split('\n')
-        for i in range(len(lines)):
-            # a.split("") -> list(a)
-            match = re.search('(\w+?)\.split\(""\)', lines[i])
-            if match:
-                lines[i] = lines[i].replace(match.group(0), 'list(' + match.group(1) + ')')
-            # a.length -> len(a)
-            match = re.search('(\w+?)\.length', lines[i])
-            if match:
-                lines[i] = lines[i].replace(match.group(0), 'len(' + match.group(1) + ')')
-            # a.slice(3) -> a[3:]
-            match = re.search('(\w+?)\.slice\(([0-9]+?)\)', lines[i])
-            if match:
-                lines[i] = lines[i].replace(match.group(0), match.group(1) + ('[%s:]' % match.group(2)))
-            # a.join("") -> "".join(a)
-            match = re.search('(\w+?)\.join\(("[^"]*?")\)', lines[i])
-            if match:
-                lines[i] = lines[i].replace(match.group(0), match.group(2) + '.join(' + match.group(1) + ')')
-        return "\n".join(lines)
-
-    def _getLocalFunBody(self, funName):
-        # get function body
-        match = re.search('(function %s\([^)]+?\){[^}]+?})' % funName, self.playerData)
-        if match:
-            # return jsFunBody
-            return match.group(1)
-        return ''
-
-    def _getAllLocalSubFunNames(self, mainFunBody):
-        match = re.compile('[ =(,](\w+?)\([^)]*?\)').findall(mainFunBody)
-        if len(match):
-            # first item is name of main function, so omit it
-            funNameTab = set(match[1:])
-            return funNameTab
-        return set()
 
     def decryptSignature(self, s, playerUrl):
-        playerUrl = playerUrl[:4] != 'http' and 'http:' + playerUrl or playerUrl
         util.debug("decrypt_signature sign_len[%d] playerUrl[%s]" % (len(s), playerUrl))
 
-        # clear local data
-        self._cleanTmpVariables()
+        if playerUrl is None:
+            raise ExtractorError('Cannot decrypt signature without playerUrl')
+
+        if playerUrl.startswith('//'):
+            playerUrl = 'https:' + playerUrl
+        elif playerUrl.startswith('/'):
+            playerUrl = 'https://youtube.com' + playerUrl
 
         # use algoCache
         if playerUrl not in self.algoCache:
@@ -75,82 +324,36 @@ class CVevoSignAlgoExtractor:
                 return ''
 
             # get main function name
-            match = re.search("signature=(\w+?)\([^)]\)", self.playerData)
+            match = re.search(r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
+            if match is None:
+                match = re.search(r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
+
             if match:
-                mainFunName = match.group(1)
+                mainFunName = match.group('sig')
                 util.debug('Main signature function name = "%s"' % mainFunName)
             else:
                 util.debug('Can not get main signature function name')
                 return ''
 
-            self._getfullAlgoCode(mainFunName)
-
-            # wrap all local algo function into one function extractedSignatureAlgo()
-            algoLines = self.fullAlgoCode.split('\n')
-            for i in range(len(algoLines)):
-                algoLines[i] = '\t' + algoLines[i]
-            self.fullAlgoCode = 'def extractedSignatureAlgo(param):'
-            self.fullAlgoCode += '\n'.join(algoLines)
-            self.fullAlgoCode += '\n\treturn %s(param)' % mainFunName
-            self.fullAlgoCode += '\noutSignature = extractedSignatureAlgo( inSignature )\n'
-
-            # after this function we should have all needed code in self.fullAlgoCode
-            try:
-                algoCodeObj = compile(self.fullAlgoCode, '', 'exec')
-            except:
-                util.debug('decryptSignature compile algo code EXCEPTION')
-                return ''
+            jsi = JSInterpreter(self.playerData)
+            initial_function = jsi.extract_function(mainFunName)
+            algoCodeObj = lambda s: initial_function([s])
         else:
             # get algoCodeObj from algoCache
             util.debug('Algo taken from cache')
             algoCodeObj = self.algoCache[playerUrl]
 
-        # for security alow only flew python global function in algo code
-        vGlobals = {"__builtins__": None, 'len': len, 'list': list}
+        signature = algoCodeObj(s)
 
-        # local variable to pass encrypted sign and get decrypted sign
-        vLocals = { 'inSignature': s, 'outSignature': '' }
-
-        # execute prepared code
-        try:
-            exec(algoCodeObj, vGlobals, vLocals)
-        except:
-            util.debug('decryptSignature exec code EXCEPTION')
-            return ''
-
-        util.debug('Decrypted signature = [%s]' % vLocals['outSignature'])
+        util.debug('Decrypted signature = [%s]' % signature)
         # if algo seems ok and not in cache, add it to cache
-        if playerUrl not in self.algoCache and '' != vLocals['outSignature']:
+        if playerUrl not in self.algoCache and '' != signature:
             util.debug('Algo from player [%s] added to cache' % playerUrl)
             self.algoCache[playerUrl] = algoCodeObj
 
-        # free not needed data
-        self._cleanTmpVariables()
+        return signature
 
-        return vLocals['outSignature']
-
-    # Note, this method is using a recursion
-    def _getfullAlgoCode(self, mainFunName, recDepth=0):
-        if self.MAX_REC_DEPTH <= recDepth:
-            util.debug('_getfullAlgoCode: Maximum recursion depth exceeded')
-            return
-
-        funBody = self._getLocalFunBody(mainFunName)
-        if '' != funBody:
-            funNames = self._getAllLocalSubFunNames(funBody)
-            if len(funNames):
-                for funName in funNames:
-                    if funName not in self.allLocalFunNamesTab:
-                        self.allLocalFunNamesTab.append(funName)
-                        util.debug("Add local function %s to known functions" % mainFunName)
-                        self._getfullAlgoCode(funName, recDepth + 1)
-
-            # conver code from javascript to python
-            funBody = self._jsToPy(funBody)
-            self.fullAlgoCode += '\n' + funBody + '\n'
-        return
-
-decryptor = CVevoSignAlgoExtractor()
+decryptor = SignatureExtractor()
 
 '''
    YouTube plugin for XBMC
