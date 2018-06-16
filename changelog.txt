@@ -1,5 +1,6 @@
 [B]1.6.56:[/B]
 - fix youtube signature
+- recognize youtu.be scheme
 [B]1.6.55:[/B]
 - duration is now recognized as infolabels attribute
 [B]1.6.54:[/B]
