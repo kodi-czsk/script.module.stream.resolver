@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
-import json
 import operator
-import re
+
 
 #source from https://github.com/rg3/youtube-dl/blob/master/youtube_dl/utils.py
 class ExtractorError(Exception):
@@ -374,10 +373,8 @@ decryptor = SignatureExtractor()
 '''
 
 import sys
-import urllib
 import cgi
 import json
-
 
 class YoutubePlayer(object):
     fmt_value = {
@@ -410,8 +407,9 @@ class YoutubePlayer(object):
     # YouTube Playback Feeds
     urls = {}
     urls['video_stream'] = "http://www.youtube.com/watch?v=%s&safeSearch=none"
-    urls['embed_stream'] = "http://www.youtube.com/get_video_info?video_id=%s"
-    urls['video_info'] = "http://gdata.youtube.com/feeds/api/videos/%s"
+    urls['embed_stream'] = "http://www.youtube.com/embed/%s"
+    urls['video_info'] = "http://www.youtube.com/get_video_info?video_id=%s" \
+                         "&eurl=https://youtube.googleapis.com/v/%s&sts=%s"
 
     def __init__(self):
         pass
@@ -445,9 +443,22 @@ class YoutubePlayer(object):
                 flashvars = data["args"]
         return flashvars
 
-    def scrapeWebPageForVideoLinks(self, result, video):
+    def scrapeWebPageForVideoLinks(self, result, video, video_id):
         links = {}
-        flashvars = self.extractFlashVars(result, 0)
+        if re.search(r'player-age-gate-content">', result) is not None:
+            # We simulate the access to the video from www.youtube.com/v/{video_id}
+            # this can be viewed without login into Youtube
+            embed_webpage = util.request(self.urls[u"embed_stream"] % video_id)
+
+            sts = re.search('"sts"\s*:\s*(\d+)', embed_webpage).group().replace('"sts":', '')
+            result = util.request(self.urls[u"video_info"] % (video_id, video_id, sts))
+
+            flashvars = cgi.parse_qs(result)
+            flashvars[u"url_encoded_fmt_stream_map"] = flashvars[u"url_encoded_fmt_stream_map"][0]
+            flashvars[u"title"] = flashvars[u"title"][0]
+        else:
+            flashvars = self.extractFlashVars(result, 0)
+
         if not flashvars.has_key(u"url_encoded_fmt_stream_map"):
             return links
 
@@ -491,7 +502,7 @@ class YoutubePlayer(object):
 
     def extractVideoLinksFromYoutube(self, url, videoid, video):
         result = util.request(self.urls[u"video_stream"] % videoid)
-        links = self.scrapeWebPageForVideoLinks(result, video)
+        links = self.scrapeWebPageForVideoLinks(result, video, videoid)
         if len(links) == 0:
             util.error(u"Couldn't find video url- or stream-map.")
         return links
