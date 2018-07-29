@@ -1,3 +1,5 @@
+[B]1.6.58:[/B]
+- preserve compatibility with older kodi versions
 [B]1.6.57:[/B]
 - youtube: age content
 [B]1.6.56:[/B]
