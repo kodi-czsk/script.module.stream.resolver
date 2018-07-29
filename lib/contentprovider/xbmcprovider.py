@@ -195,8 +195,13 @@ class XBMContentProvider(object):
             il = self._extract_infolabels(item['info'])
             if len(il) > 0:  # only set when something was extracted
                 li.setInfo('video', il)
-            local_subs = xbmcutil.set_subtitles(li, stream['subs'], stream.get('headers'))
-            xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
+            try:
+                local_subs = xbmcutil.set_subtitles(li, stream['subs'], stream.get('headers'))
+            except:
+                xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
+                xbmcutil.load_subtitles(stream['subs'], stream.get('headers'))
+            else:
+                xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
 
     def _handle_exc(self, e):
         msg = e.message
