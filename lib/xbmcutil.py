@@ -57,6 +57,7 @@ def request(url, headers=None):
         headers = {}
     debug('request: %s' % url)
     req = urllib2.Request(url, headers=headers)
+    req.add_header('User-Agent', UA)
     response = urllib2.urlopen(req)
     data = response.read()
     response.close()
