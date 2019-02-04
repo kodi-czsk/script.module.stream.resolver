@@ -326,6 +326,12 @@ class SignatureExtractor:
             match = re.search(r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
             if match is None:
                 match = re.search(r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
+            if match is None:
+                match = re.search(r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*c\s*&&\s*d\.set\([^,]+\s*,\s*(?:encodeURIComponent\s*\()?(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
+            if match is None:
+                match = re.search(r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*(?:encodeURIComponent\s*\()?\s*(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
+            if match is None:
+                match = re.search(r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
 
             if match:
                 mainFunName = match.group('sig')

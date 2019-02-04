@@ -1,3 +1,5 @@
+[B]1.6.59:[/B]
+- fix youtube signature
 [B]1.6.58:[/B]
 - preserve compatibility with older kodi versions
 [B]1.6.57:[/B]
