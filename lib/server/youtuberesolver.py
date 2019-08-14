@@ -322,17 +322,27 @@ class SignatureExtractor:
                 util.debug('Unable to download playerUrl webpage')
                 return ''
 
-            # get main function name
-            match = re.search(r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
-            if match is None:
-                match = re.search(r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
-            if match is None:
-                match = re.search(r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*c\s*&&\s*d\.set\([^,]+\s*,\s*(?:encodeURIComponent\s*\()?(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
-            if match is None:
-                match = re.search(r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*(?:encodeURIComponent\s*\()?\s*(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
-            if match is None:
-                match = re.search(r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(', self.playerData)
+            patterns = [
+                r'\b[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'\b[a-zA-Z0-9]+\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'(?P<sig>[a-zA-Z0-9$]+)\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)',
+                # Obsolete patterns
+                r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*(?:encodeURIComponent\s*\()?\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'\b[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'\b[a-zA-Z0-9]+\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'\bc\s*&&\s*a\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'\bc\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                r'\bc\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\('
+            ]
 
+            match = None
+            for pattern in patterns:
+                match = re.search(pattern, self.playerData)
+                if match is not None:
+                    break
+                    
             if match:
                 mainFunName = match.group('sig')
                 util.debug('Main signature function name = "%s"' % mainFunName)
@@ -491,12 +501,12 @@ class YoutubePlayer(object):
                 url = urllib.unquote(url_desc_map[u"stream"][0])
 
             if url_desc_map.has_key(u"sig"):
-                url = url + u"&signature=" + url_desc_map[u"sig"][0]
+                url = url + u"&sig=" + url_desc_map[u"sig"][0]
             elif url_desc_map.has_key(u"s"):
                 sig = url_desc_map[u"s"][0]
                 flashvars = self.extractFlashVars(result, 1)
                 js = flashvars[u"js"]
-                url = url + u"&signature=" + self.decrypt_signature(sig, js)
+                url = url + u"&sig=" + self.decrypt_signature(sig, js)
 
             links[key] = url
 

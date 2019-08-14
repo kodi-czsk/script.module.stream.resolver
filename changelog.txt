@@ -1,3 +1,5 @@
+[B]1.6.61:[/B]
+- fix youtube signature
 [B]1.6.60:[/B]
 - fix cloudflare scrape protection
 [B]1.6.59:[/B]
