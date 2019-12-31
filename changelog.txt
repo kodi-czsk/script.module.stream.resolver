@@ -1,3 +1,5 @@
+[B]1.6.62:[/B]
+- fix dailymotion auto quality stream
 [B]1.6.61:[/B]
 - fix youtube signature
 [B]1.6.60:[/B]
