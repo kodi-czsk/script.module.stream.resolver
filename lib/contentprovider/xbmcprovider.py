@@ -29,8 +29,8 @@ import time
 import xbmcplugin
 import xbmc
 import xbmcgui
-import urlparse
-import urllib
+import urllib.parse
+import urllib.request, urllib.parse, urllib.error
 from collections import defaultdict
 from provider import ResolveException
 
@@ -69,7 +69,7 @@ class XBMContentProvider(object):
 
     def check_setting_keys(self, keys):
         for key in keys:
-            if not key in self.settings.keys():
+            if not key in list(self.settings.keys()):
                 raise Exception('Invalid settings passed - [' + key + '] setting is required')
 
     def params(self):
@@ -78,20 +78,20 @@ class XBMContentProvider(object):
     def run(self, params):
         if params == {} or params == self.params():
             return self.root()
-        if 'list' in params.keys():
+        if 'list' in list(params.keys()):
             self.list(self.provider.list(params['list']))
             return xbmcplugin.endOfDirectory(int(sys.argv[1]))
-        if 'down' in params.keys():
+        if 'down' in list(params.keys()):
             return self.download({'url': params['down'], 'title': params['title']})
-        if 'play' in params.keys():
+        if 'play' in list(params.keys()):
             return self.play({'url': params['play'], 'info': params})
-        if 'search-list' in params.keys():
+        if 'search-list' in list(params.keys()):
             return self.search_list()
-        if 'search' in params.keys():
+        if 'search' in list(params.keys()):
             return self.do_search(params['search'])
-        if 'search-remove' in params.keys():
+        if 'search-remove' in list(params.keys()):
             return self.search_remove(params['search-remove'])
-        if 'search-edit' in params.keys():
+        if 'search-edit' in list(params.keys()):
             return self.search_edit(params['search-edit'])
         if self.run_custom:
             return self.run_custom(params)
@@ -167,7 +167,7 @@ class XBMContentProvider(object):
             return
         stream = self.resolve(item['url'])
         if stream:
-            if not 'headers' in stream.keys():
+            if not 'headers' in list(stream.keys()):
                 stream['headers'] = {}
             xbmcutil.reportUsage(self.addon_id, self.addon_id + '/download')
             # clean up \ and /
@@ -186,11 +186,11 @@ class XBMContentProvider(object):
         stream = self.resolve(item['url'])
         if stream:
             xbmcutil.reportUsage(self.addon_id, self.addon_id + '/play')
-            if 'headers' in stream.keys():
-                headerStr = '|' + urllib.urlencode(stream['headers'])
+            if 'headers' in list(stream.keys()):
+                headerStr = '|' + urllib.parse.urlencode(stream['headers'])
                 if len(headerStr) > 1:
                     stream['url'] += headerStr
-            print 'Sending %s to player' % stream['url']
+            print('Sending %s to player' % stream['url'])
             li = xbmcgui.ListItem(path=stream['url'], iconImage='DefaulVideo.png')
             il = self._extract_infolabels(item['info'])
             if len(il) > 0:  # only set when something was extracted
@@ -220,7 +220,7 @@ class XBMContentProvider(object):
         item.update({'url': url})
         try:
             return self.provider.resolve(item)
-        except ResolveException, e:
+        except ResolveException as e:
             self._handle_exc(e)
 
     def search(self, keyword):
@@ -257,7 +257,7 @@ class XBMContentProvider(object):
         params.update({'list': item['url']})
         title = item['title']
         img = None
-        if 'img' in item.keys():
+        if 'img' in list(item.keys()):
             img = item['img']
         if title.find('$') == 0:
             try:
@@ -265,8 +265,8 @@ class XBMContentProvider(object):
             except:
                 pass
         menuItems = {}
-        if 'menu' in item.keys():
-            for ctxtitle, value in item['menu'].iteritems():
+        if 'menu' in list(item.keys()):
+            for ctxtitle, value in item['menu'].items():
                 if ctxtitle.find('$') == 0:
                     try:
                         ctxtitle = self.addon.getLocalizedString(int(ctxtitle[1:]))
@@ -281,7 +281,7 @@ class XBMContentProvider(object):
         for label in ['title', 'plot', 'year', 'genre', 'rating', 'director',
                       'votes', 'cast', 'trailer', 'tvshowtitle', 'season',
                       'episode', 'duration']:
-            if label in item.keys():
+            if label in list(item.keys()):
                 infoLabels[label] = util.decode_html(item[label])
         return infoLabels
 
@@ -299,8 +299,8 @@ class XBMContentProvider(object):
         menuItems = {}
         if "!download" not in self.provider.capabilities():
             menuItems[xbmc.getLocalizedString(33003)] = downparams
-        if 'menu' in item.keys():
-            for ctxtitle, value in item['menu'].iteritems():
+        if 'menu' in list(item.keys()):
+            for ctxtitle, value in item['menu'].items():
                 if ctxtitle.find('$') == 0:
                     try:
                         ctxtitle = self.addon.getLocalizedString(int(ctxtitle[1:]))
@@ -351,7 +351,7 @@ class XBMCMultiResolverContentProvider(XBMContentProvider):
                 return resolved[ret]
         try:
             return self.provider.resolve(item, select_cb=select_cb)
-        except ResolveException, e:
+        except ResolveException as e:
             self._handle_exc(e)
 
 
@@ -371,7 +371,7 @@ class XBMCLoginOptionalContentProvider(XBMContentProvider):
         self.check_setting_keys(['vip'])
 
     def ask_for_captcha(self, params):
-        img = os.path.join(unicode(xbmc.translatePath(
+        img = os.path.join(str(xbmc.translatePath(
             self.addon.getAddonInfo('profile'))), 'captcha.png')
         util.save_to_file(params['img'], img)
         cd = CaptchaDialog('captcha-dialog.xml',
@@ -383,7 +383,7 @@ class XBMCLoginOptionalContentProvider(XBMContentProvider):
         kb = xbmc.Keyboard('', self.addon.getLocalizedString(200), False)
         kb.doModal()
         if kb.isConfirmed():
-            print 'got code ' + kb.getText()
+            print('got code ' + kb.getText())
             return kb.getText()
 
     def ask_for_account_type(self):
@@ -409,7 +409,7 @@ class XBMCLoginOptionalContentProvider(XBMContentProvider):
                 return
         try:
             return self.provider.resolve(item, captcha_cb=self.ask_for_captcha)
-        except ResolveException, e:
+        except ResolveException as e:
             self._handle_exc(e)
 
 
@@ -437,7 +437,7 @@ class XBMCLoginOptionalDelayedContentProvider(XBMCLoginOptionalContentProvider):
                 return
         try:
             return self.provider.resolve(item, captcha_cb=self.ask_for_captcha, wait_cb=self.wait_cb)
-        except ResolveException, e:
+        except ResolveException as e:
             self._handle_exc(e)
 
 

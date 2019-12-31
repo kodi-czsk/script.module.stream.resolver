@@ -145,7 +145,7 @@ def bin( x):
         pass
     try:
         return '0b' + ''.join(reversed(out))
-    except NameError, ne2:
+    except NameError as ne2:
         out.reverse()
     return '0b' + ''.join(out)
 

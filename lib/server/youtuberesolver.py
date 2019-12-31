@@ -284,7 +284,7 @@ class JSInterpreter(object):
 
     def build_function(self, argnames, code):
         def resf(args):
-            local_vars = dict(zip(argnames, args))
+            local_vars = dict(list(zip(argnames, args)))
             for stmt in code.split(';'):
                 res, abort = self.interpret_statement(stmt, local_vars)
                 if abort:
@@ -294,7 +294,7 @@ class JSInterpreter(object):
 
 
 # inspired by https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/youtube.py
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 class SignatureExtractor:
 
     def __init__(self):
@@ -314,9 +314,9 @@ class SignatureExtractor:
         # use algoCache
         if playerUrl not in self.algoCache:
             # get player HTML 5 sript
-            request = urllib2.Request(playerUrl)
+            request = urllib.request.Request(playerUrl)
             try:
-                self.playerData = urllib2.urlopen(request).read()
+                self.playerData = urllib.request.urlopen(request).read()
                 self.playerData = self.playerData.decode('utf-8', 'ignore')
             except:
                 util.debug('Unable to download playerUrl webpage')
@@ -464,49 +464,49 @@ class YoutubePlayer(object):
         if re.search(r'player-age-gate-content">', result) is not None:
             # We simulate the access to the video from www.youtube.com/v/{video_id}
             # this can be viewed without login into Youtube
-            embed_webpage = util.request(self.urls[u"embed_stream"] % video_id)
+            embed_webpage = util.request(self.urls["embed_stream"] % video_id)
 
             sts = re.search('"sts"\s*:\s*(\d+)', embed_webpage).group().replace('"sts":', '')
-            result = util.request(self.urls[u"video_info"] % (video_id, video_id, sts))
+            result = util.request(self.urls["video_info"] % (video_id, video_id, sts))
 
             flashvars = cgi.parse_qs(result)
-            flashvars[u"url_encoded_fmt_stream_map"] = flashvars[u"url_encoded_fmt_stream_map"][0]
-            flashvars[u"title"] = flashvars[u"title"][0]
+            flashvars["url_encoded_fmt_stream_map"] = flashvars["url_encoded_fmt_stream_map"][0]
+            flashvars["title"] = flashvars["title"][0]
         else:
             flashvars = self.extractFlashVars(result, 0)
 
-        if not flashvars.has_key(u"url_encoded_fmt_stream_map"):
+        if "url_encoded_fmt_stream_map" not in flashvars:
             return links
 
-        if flashvars.has_key(u"ttsurl"):
-            video[u"ttsurl"] = flashvars[u"ttsurl"]
-        if flashvars.has_key("title"):
+        if "ttsurl" in flashvars:
+            video["ttsurl"] = flashvars["ttsurl"]
+        if "title" in flashvars:
             video["title"] = flashvars["title"]
 
-        for url_desc in flashvars[u"url_encoded_fmt_stream_map"].split(u","):
+        for url_desc in flashvars["url_encoded_fmt_stream_map"].split(","):
             url_desc_map = cgi.parse_qs(url_desc)
-            if not (url_desc_map.has_key(u"url") or url_desc_map.has_key(u"stream")):
+            if not ("url" in url_desc_map or "stream" in url_desc_map):
                 continue
 
-            key = int(url_desc_map[u"itag"][0])
-            url = u""
-            if url_desc_map.has_key(u"url"):
-                url = urllib.unquote(url_desc_map[u"url"][0])
-            elif url_desc_map.has_key(u"conn") and url_desc_map.has_key(u"stream"):
-                url = urllib.unquote(url_desc_map[u"conn"][0])
+            key = int(url_desc_map["itag"][0])
+            url = ""
+            if "url" in url_desc_map:
+                url = urllib.parse.unquote(url_desc_map["url"][0])
+            elif "conn" in url_desc_map and "stream" in url_desc_map:
+                url = urllib.parse.unquote(url_desc_map["conn"][0])
                 if url.rfind("/") < len(url) - 1:
                     url = url + "/"
-                url = url + urllib.unquote(url_desc_map[u"stream"][0])
-            elif url_desc_map.has_key(u"stream") and not url_desc_map.has_key(u"conn"):
-                url = urllib.unquote(url_desc_map[u"stream"][0])
+                url = url + urllib.parse.unquote(url_desc_map["stream"][0])
+            elif "stream" in url_desc_map and "conn" not in url_desc_map:
+                url = urllib.parse.unquote(url_desc_map["stream"][0])
 
-            if url_desc_map.has_key(u"sig"):
-                url = url + u"&sig=" + url_desc_map[u"sig"][0]
-            elif url_desc_map.has_key(u"s"):
-                sig = url_desc_map[u"s"][0]
+            if "sig" in url_desc_map:
+                url = url + "&sig=" + url_desc_map["sig"][0]
+            elif "s" in url_desc_map:
+                sig = url_desc_map["s"][0]
                 flashvars = self.extractFlashVars(result, 1)
-                js = flashvars[u"js"]
-                url = url + u"&sig=" + self.decrypt_signature(sig, js)
+                js = flashvars["js"]
+                url = url + "&sig=" + self.decrypt_signature(sig, js)
 
             links[key] = url
 
@@ -517,10 +517,10 @@ class YoutubePlayer(object):
 
 
     def extractVideoLinksFromYoutube(self, url, videoid, video):
-        result = util.request(self.urls[u"video_stream"] % videoid)
+        result = util.request(self.urls["video_stream"] % videoid)
         links = self.scrapeWebPageForVideoLinks(result, video, videoid)
         if len(links) == 0:
-            util.error(u"Couldn't find video url- or stream-map.")
+            util.error("Couldn't find video url- or stream-map.")
         return links
 # /*
 # *      Copyright (C) 2011 Libor Zoubek
@@ -542,7 +542,7 @@ class YoutubePlayer(object):
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re, util, urllib
+import re, util, urllib.request, urllib.parse, urllib.error
 __name__ = 'youtube'
 
 
@@ -560,7 +560,7 @@ def resolve(url):
         links = player.extractVideoLinksFromYoutube(url, m.group('id'), video)
         resolved = []
         for q in links:
-            if q in player.fmt_value.keys():
+            if q in list(player.fmt_value.keys()):
                 quality = player.fmt_value[q]
                 item = {}
                 item['name'] = __name__

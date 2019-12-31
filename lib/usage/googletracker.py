@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import os,re,sys,urllib,urllib2,traceback,cookielib,random,time
+import os,re,sys,urllib.request,urllib.parse,urllib.error,urllib.request,urllib.error,urllib.parse,traceback,http.cookiejar,random,time
 UA='Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
 
 TRACKER_URL='http://www.google-analytics.com/__utm.gif'
@@ -27,19 +27,19 @@ __name__ = 'google'
 ##
 # initializes urllib cookie handler
 def init_urllib():
-    cj = cookielib.LWPCookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    urllib2.install_opener(opener)
+    cj = http.cookiejar.LWPCookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+    urllib.request.install_opener(opener)
 
 def _request(url,info):
     # setup useragent!!
-    print '[google] Submiting usage'
-    req = urllib2.Request(url)
+    print('[google] Submiting usage')
+    req = urllib.request.Request(url)
     req.add_header('User-Agent',info['useragent'])
-    response = urllib2.urlopen(req)
+    response = urllib.request.urlopen(req)
     data = response.read()
     if 200 == response.code:
-        print '[google] Usage has been submitted'
+        print('[google] Usage has been submitted')
     response.close()
 
 def _get_cookie(info):
@@ -68,7 +68,7 @@ def track_usage(url,action,trackingCode,dry,info):
             'utmcc':_get_cookie(info),
             'utmu':'q~' # what is this about?
             }
-    req = TRACKER_URL+'?'+urllib.urlencode(params)
+    req = TRACKER_URL+'?'+urllib.parse.urlencode(params)
     if not dry:
         _request(req,info)
 

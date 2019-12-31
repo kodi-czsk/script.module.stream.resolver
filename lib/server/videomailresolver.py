@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re, util,urllib2
+import re, util,urllib.request,urllib.error,urllib.parse
 __name__ = 'videomail'
 def supports(url):
     return not _regex(url) == None
@@ -35,16 +35,16 @@ def resolve(url):
         vurl = 'http://videoapi.my.mail.ru/' + vurl + '.json'
 
         util.init_urllib()
-        req = urllib2.Request(vurl)
+        req = urllib.request.Request(vurl)
         req.add_header('User-Agent', util.UA)
-        resp = urllib2.urlopen(req)
+        resp = urllib.request.urlopen(req)
         data = resp.read()
         vkey = []
         for cookie in re.finditer('(video_key=[^\;]+)',resp.headers.get('Set-Cookie'),re.IGNORECASE | re.DOTALL):
             vkey.append(cookie.group(1))
         headers = {'Cookie':vkey[-1]}
         item = util.json.loads(data)
-        for v in item[u'videos']:
+        for v in item['videos']:
             quality = v['key']
             link = v['url']
             items.append({'quality':quality, 'url':link, 'headers':headers})

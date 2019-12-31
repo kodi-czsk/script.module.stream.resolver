@@ -12,8 +12,8 @@
 # */
 
 import re
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import random
 import decimal
 
@@ -67,7 +67,7 @@ def _decode(param):
             if loc_3[j + 1] == 64:
                 break
             try:
-                loc_2 += unichr(loc_4[j])
+                loc_2 += chr(loc_4[j])
             except:
                 pass
             j = j + 1
@@ -79,7 +79,7 @@ def _decode(param):
 def resolve(url):
     m = _regex(url)
     if m:
-        resp = urllib2.urlopen(url)
+        resp = urllib.request.urlopen(url)
         sessc = resp.headers.get('Set-Cookie').split(';')[0]
         resp.close()
         furl = "%s/w.jsp?id=%s&width=620&height=349&pos=&skin=0" % (BASE_URL,m.group('id'))

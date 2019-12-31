@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re, util, decimal, random, base64, urllib
+import re, util, decimal, random, base64, urllib.request, urllib.parse, urllib.error
 
 __name__ = 'kset'
 def supports(url):
@@ -43,9 +43,9 @@ def resolve(url):
                   'r':gen_random_decimal(0, 99999999999999)
                   }
         quality = "480p"
-        data = util.request("http://kset.kz/v.php?" + urllib.urlencode(params), headers=headers)
+        data = util.request("http://kset.kz/v.php?" + urllib.parse.urlencode(params), headers=headers)
         item = util.json.loads(base64.decodestring(data))
-        return [{'quality':quality, 'url':item[u'file']}]
+        return [{'quality':quality, 'url':item['file']}]
     
     
 def _regex(url):

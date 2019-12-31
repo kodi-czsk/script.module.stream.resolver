@@ -26,7 +26,7 @@ import resolver
 try:
     import StorageServer
 except ImportError:
-    print 'Using dummy storage server'
+    print('Using dummy storage server')
     import storageserverdummy as StorageServer
 
 

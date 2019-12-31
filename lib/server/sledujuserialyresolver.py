@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re,util,urllib2,traceback
+import re,util,urllib.request,urllib.error,urllib.parse,traceback
 __name__ = 'zkouknito.cz'
 def supports(url):
     return not _regex(url) == None
@@ -37,7 +37,7 @@ def resolve(url):
                 subs = re.search('\'file\'\: \'(?P<url>.+?srt)',data)
                 if subs:
                     item['subs'] = _furl(subs.group('url'))
-                print item
+                print(item)
                 return [item]
 
 def _furl(url):
