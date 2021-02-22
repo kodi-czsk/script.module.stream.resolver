@@ -21,8 +21,8 @@
 # */
 
 import re
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import random
 import decimal
 
@@ -40,7 +40,7 @@ def resolve(url):
         data = util.request("http://player.vimeo.com/v2/video/%s/config?type=moogaloop&referrer=&player_url=player.vimeo.com&v=1.0.0&cdn_url=http://a.vimeocdn.com"%m.group('id'))
         data = util.json.loads(data)
         h264 = data["request"]["files"]["h264"]
-        for quality in h264.iterkeys():
+        for quality in h264.keys():
             item = {}
             item['title'] = data['video']['title']
             item['length'] = data['video']['duration']

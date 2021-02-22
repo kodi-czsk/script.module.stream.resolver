@@ -31,16 +31,16 @@ def supports(url):
 
 
 def resolve(url):
-    print 'The url is ::', url
+    print('The url is ::', url)
     id = re.search(r'dailymotion.com/embed/video/(.+)', url).group(1)
-    print 'The id is ::', id
+    print('The id is ::', id)
     headers = {'User-Agent': 'Android'}
     cookie = {'Cookie': "lang=en; ff=off"}
     r = util.request("http://www.dailymotion.com/player/metadata/video/" + id,
                      headers)
     content = json.loads(r)
     cc = content['qualities']
-    cc = cc.items()
+    cc = list(cc.items())
 
     cc = sorted(cc, reverse=True)
     m_url = ''

@@ -22,10 +22,10 @@
 import os
 import re
 import sys
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import traceback
-import cookielib
+import http.cookiejar
 import time
 import socket
 import unicodedata
@@ -33,7 +33,7 @@ import xbmcgui
 import xbmcplugin
 import xbmc
 import xbmcaddon
-from htmlentitydefs import name2codepoint as n2cp
+from html.entities import name2codepoint as n2cp
 import json
 import util
 UA = 'Mozilla/6.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/2008092417 Firefox/3.0.3'
@@ -47,17 +47,17 @@ __lang__ = __addon__.getLocalizedString
 
 
 def init_urllib():
-    cj = cookielib.LWPCookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    urllib2.install_opener(opener)
+    cj = http.cookiejar.LWPCookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+    urllib.request.install_opener(opener)
 
 
 def request(url, headers=None):
     if headers is None:
         headers = {}
     debug('request: %s' % url)
-    req = urllib2.Request(url, headers=headers)
-    response = urllib2.urlopen(req)
+    req = urllib.request.Request(url, headers=headers)
+    response = urllib.request.urlopen(req)
     data = response.read()
     response.close()
     debug('len(data) %s' % len(data))
@@ -65,10 +65,10 @@ def request(url, headers=None):
 
 
 def post(url, data):
-    postdata = urllib.urlencode(data)
-    req = urllib2.Request(url, postdata)
+    postdata = urllib.parse.urlencode(data)
+    req = urllib.request.Request(url, postdata)
     req.add_header('User-Agent', UA)
-    response = urllib2.urlopen(req)
+    response = urllib.request.urlopen(req)
     data = response.read()
     response.close()
     return data
@@ -96,7 +96,7 @@ def add_dir(name, params, logo='', infoLabels={}, menuItems={}):
     except:
         traceback.print_exc()
     items = []
-    for mi in menuItems.keys():
+    for mi in list(menuItems.keys()):
         action = menuItems[mi]
         if not type(action) == type({}):
             items.append((mi, action))
@@ -124,7 +124,7 @@ def add_local_dir(name, url, logo='', infoLabels={}, menuItems={}):
     liz = xbmcgui.ListItem(name, iconImage='DefaultFolder.png', thumbnailImage=logo)
     liz.setInfo(type='Video', infoLabels=infoLabels)
     items = []
-    for mi in menuItems.keys():
+    for mi in list(menuItems.keys()):
         items.append((mi, 'RunPlugin(%s)' % _create_plugin_url(menuItems[mi])))
     if len(items) > 0:
         liz.addContextMenuItems(items)
@@ -144,7 +144,7 @@ def add_video(name, params={}, logo='', infoLabels={}, menuItems={}):
     li.addStreamInfo('video', {})
     li.setProperty('IsPlayable', 'true')
     items = [(xbmc.getLocalizedString(13347), 'Action(Queue)')]
-    for mi in menuItems.keys():
+    for mi in list(menuItems.keys()):
         action = menuItems[mi]
         if not type(action) == type({}):
             items.append((mi, action))
@@ -169,7 +169,7 @@ def add_video(name, params={}, logo='', infoLabels={}, menuItems={}):
 
 def _create_plugin_url(params, plugin=sys.argv[0]):
     url = []
-    for key in params.keys():
+    for key in list(params.keys()):
         value = decode_html(params[key])
         #--value = value.encode('ascii','ignore')
         value = value.encode('utf-8')
@@ -249,28 +249,28 @@ def _substitute_entity(match):
         # decoding by number
         if match.group(2) == '':
             # number is in decimal
-            return unichr(int(ent))
+            return chr(int(ent))
         elif match.group(2) == 'x':
             # number is in hex
-            return unichr(int('0x' + ent, 16))
+            return chr(int('0x' + ent, 16))
         else:
             # they were using a name
             cp = n2cp.get(ent)
             if cp:
-                return unichr(cp)
+                return chr(cp)
             else:
                 return match.group()
 
 
 def decode_html(data):
     try:
-        if not type(data) == unicode:
-            data = unicode(data, 'utf-8', errors='ignore')
+        if not type(data) == str:
+            data = str(data, 'utf-8', errors='ignore')
         entity_re = re.compile(r'&(#?)(x?)(\w+);')
         return entity_re.subn(_substitute_entity, data)[0]
     except:
         traceback.print_exc()
-        print[data]
+        print([data])
         return data
 
 
@@ -345,7 +345,7 @@ def get_searches(addon, server):
         return []
     f = open(c_local, 'r')
     data = f.read()
-    searches = json.loads(unicode(data.decode('utf-8', 'ignore')))
+    searches = json.loads(str(data.decode('utf-8', 'ignore')))
     f.close()
     return searches
 
@@ -360,7 +360,7 @@ def add_search(addon, server, search, maximum):
     if os.path.exists(c_local):
         f = open(c_local, 'r')
         data = f.read()
-        searches = json.loads(unicode(data.decode('utf-8', 'ignore')))
+        searches = json.loads(str(data.decode('utf-8', 'ignore')))
         f.close()
     if search in searches:
         searches.remove(search)
@@ -393,7 +393,7 @@ def remove_search(addon, server, search):
     if os.path.exists(c_local):
         f = open(c_local, 'r')
         data = f.read()
-        searches = json.loads(unicode(data.decode('utf-8', 'ignore')))
+        searches = json.loads(str(data.decode('utf-8', 'ignore')))
         f.close()
         searches.remove(search)
         f = open(c_local, 'w')
@@ -422,7 +422,7 @@ def download(addon, filename, url, local, notifyFinishDialog=True, headers={}):
         notifyPercent = 5
 
     def encode(string):
-        return u' '.join(string).encode('utf-8')
+        return ' '.join(string).encode('utf-8')
 
     def notify(title, message, time=3000):
         try:
@@ -472,7 +472,7 @@ class Downloader(object):
         self.percent = -1
 
     def download(self, remote, local, filename=None, headers={}):
-        class MyURLopener(urllib.FancyURLopener):
+        class MyURLopener(urllib.request.FancyURLopener):
 
             def http_error_default(self, url, fp, errcode, errmsg, headers):
                 self.error_msg = 'Downlad failed, error : ' + str(errcode)
@@ -514,23 +514,23 @@ class Downloader(object):
                 self.callback(percent, speed, est, self.filename)
             self.percent = percent
 
-_diacritic_replace = {u'\u00f3': 'o',
-                      u'\u0213': '-',
-                      u'\u00e1': 'a',
-                      u'\u010d': 'c',
-                      u'\u010c': 'C',
-                      u'\u010f': 'd',
-                      u'\u010e': 'D',
-                      u'\u00e9': 'e',
-                      u'\u011b': 'e',
-                      u'\u00ed': 'i',
-                      u'\u0148': 'n',
-                      u'\u0159': 'r',
-                      u'\u0161': 's',
-                      u'\u0165': 't',
-                      u'\u016f': 'u',
-                      u'\u00fd': 'y',
-                      u'\u017e': 'z'
+_diacritic_replace = {'\u00f3': 'o',
+                      '\u0213': '-',
+                      '\u00e1': 'a',
+                      '\u010d': 'c',
+                      '\u010c': 'C',
+                      '\u010f': 'd',
+                      '\u010e': 'D',
+                      '\u00e9': 'e',
+                      '\u011b': 'e',
+                      '\u00ed': 'i',
+                      '\u0148': 'n',
+                      '\u0159': 'r',
+                      '\u0161': 's',
+                      '\u0165': 't',
+                      '\u016f': 'u',
+                      '\u00fd': 'y',
+                      '\u017e': 'z'
                       }
 
 
@@ -549,6 +549,6 @@ def compat_path(path):
         if isinstance(path, str):
             path = path.decode('utf-8')
     else:
-        if isinstance(path, unicode):
+        if isinstance(path, str):
             path = path.encode('utf-8')
     return path

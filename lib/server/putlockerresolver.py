@@ -78,15 +78,15 @@ def url(url):
 		#find session_hash
 		try:
 			html = util.request(web_url)
-		except urllib2.URLError, e:
-			print ('putlocker: got http error %d fetching %s' % (e.code, web_url))
+		except urllib.error.URLError as e:
+			print(('putlocker: got http error %d fetching %s' % (e.code, web_url)))
 			return False
         
 		#Shortcut for logged in users
 		pattern = '<a href="(/.+?)" class="download_file_link" style="margin:0px 0px;">Download File</a>'
 		link = re.search(pattern, html)
 		if link:
-			print 'Direct link found: %s' %link.group(1)
+			print('Direct link found: %s' %link.group(1))
 			return 'http://www.putlocker.com%s' %link.group(1)
 
 		r = re.search('value="([0-9a-f]+?)" name="hash"', html)
@@ -99,8 +99,8 @@ def url(url):
 		#post session_hash
 		try:
 			html = util.post(web_url, {'hash': session_hash,'confirm': 'Continue as Free User'})
-		except urllib2.URLError, e:
-			print ('putlocker: got http error %d posting %s' %(e.code, web_url))
+		except urllib.error.URLError as e:
+			print(('putlocker: got http error %d posting %s' %(e.code, web_url)))
 			return False
 		
 		#find playlist code  
@@ -135,7 +135,7 @@ def url(url):
 			xml_url += playlist_code
 			try:
 				html = util.request(xml_url)
-			except urllib2.URLError, e:
+			except urllib.error.URLError as e:
 				pritn ('putlocker: got http error %d fetching %s'(e.code, xml_url))
 				return False
     

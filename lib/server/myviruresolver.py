@@ -24,14 +24,14 @@
 
 import re
 import util
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import pickle
 from demjson import demjson
 
 __author__ = 'Jose Riha'
 __name__ = 'myviru'
 
-UA = urllib.quote(util.UA)
+UA = urllib.parse.quote(util.UA)
 
 
 def supports(url):
@@ -50,7 +50,7 @@ def resolve(url):
         '.myvi.ru']['/']['UniversalUserID']
     for f in playlist['video']:
         streamurl = f['url']
-        streamurl += '|Cookie=UniversalUserID%3D' + urllib.quote(uuid.value)
+        streamurl += '|Cookie=UniversalUserID%3D' + urllib.parse.quote(uuid.value)
         streamurl += '&User-Agent=' + UA
         result.append({'url': streamurl})
     if result:

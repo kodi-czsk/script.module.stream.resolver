@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re,util,urllib
+import re,util,urllib.request,urllib.parse,urllib.error
 __name__ = 'servertip'
 def supports(url):
     return not _regex(url) == None

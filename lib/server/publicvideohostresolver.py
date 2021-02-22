@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re, util, decimal, random, base64, urllib
+import re, util, decimal, random, base64, urllib.request, urllib.parse, urllib.error
 
 __name__ = 'publicvideohost'
 def supports(url):
@@ -37,7 +37,7 @@ def resolve(url):
                   'v':id,
                   }
         quality = "480p"
-        data = util.request("http://embed.publicvideohost.org/v.php?" + urllib.urlencode(params))
+        data = util.request("http://embed.publicvideohost.org/v.php?" + urllib.parse.urlencode(params))
         vurl = re.search('file\:(.*?)\"(?P<url>[^"]+)',data, re.IGNORECASE | re.DOTALL).group('url')
         return [{'quality':quality, 'url':vurl}]
     

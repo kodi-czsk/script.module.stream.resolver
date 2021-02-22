@@ -45,7 +45,7 @@ def resolve(url):
         if r:
 
             for match in r:
-                print match.groups()
+                print(match.groups())
                 res, url = match.groups()
                 res = int(res.strip('p'))
                 if res > chosen_res and res <= max_res:
@@ -145,7 +145,7 @@ def bin( x):
         pass
     try:
         return '0b' + ''.join(reversed(out))
-    except NameError, ne2:
+    except NameError as ne2:
         out.reverse()
     return '0b' + ''.join(out)
 

@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re, util, urllib2, traceback
+import re, util, urllib.request, urllib.error, urllib.parse, traceback
 __name__ = 'koukni.cz'
 def supports(url):
     return not _regex(url) == None
