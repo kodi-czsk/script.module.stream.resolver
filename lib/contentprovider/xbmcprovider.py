@@ -189,7 +189,7 @@ class XBMContentProvider(object):
             if 'headers' in list(stream.keys()):
                 headerStr = '|' + urllib.parse.urlencode(stream['headers'])
                 if len(headerStr) > 1:
-                    stream['url'] += headerStr
+                    stream['url'] += headerStr.encode('utf-8')
             print('Sending %s to player' % stream['url'])
             li = xbmcgui.ListItem(path=stream['url'])
             li.setArt({'icon': 'DefaulVideo.png'})

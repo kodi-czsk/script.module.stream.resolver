@@ -33,6 +33,7 @@ import xbmcgui
 import xbmcplugin
 import xbmc
 import xbmcaddon
+import xbmcvfs
 from html.entities import name2codepoint as n2cp
 import json
 import util
@@ -175,8 +176,8 @@ def _create_plugin_url(params, plugin=sys.argv[0]):
     for key in list(params.keys()):
         value = decode_html(params[key])
         #--value = value.encode('ascii','ignore')
-        value = value.encode('utf-8')
-        url.append(key + '=' + value.encode('hex',) + '&')
+        value = value.encode('utf-8').hex()
+        url.append(key + '=' + value + '&')
     return plugin + '?' + ''.join(url)
 
 
@@ -195,7 +196,7 @@ def init_usage_reporting(addonid):
 
 def save_to_file(url, file, headers=None):
     try:
-        f = open(compat_path(file), 'w')
+        f = open(compat_path(file), 'wb')
         f.write(request(url, headers))
         f.flush()
         os.fsync(f.fileno())
@@ -208,7 +209,7 @@ def save_to_file(url, file, headers=None):
 def set_subtitles(listItem, url, headers=None):
     if not (url == '' or url == None):
         util.info('Downloading subtitles')
-        local = xbmc.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
+        local = xbmcvfs.translatePath(__addon__.getAddonInfo('path'))
         c_local = compat_path(local)
         if not os.path.exists(c_local):
             os.makedirs(c_local)
