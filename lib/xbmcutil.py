@@ -90,7 +90,8 @@ def add_dir(name, params, logo='', infoLabels={}, menuItems={}):
         infoLabels['title'] = ''
     if logo == None:
         logo = ''
-    liz = xbmcgui.ListItem(name, iconImage='DefaultFolder.png', thumbnailImage=logo)
+    liz = xbmcgui.ListItem(name)
+    liz.setArt({'icon': 'DefaultFolder.png', 'thumb': logo})
     try:
         liz.setInfo(type='Video', infoLabels=infoLabels)
     except:
@@ -121,7 +122,8 @@ def add_dir(name, params, logo='', infoLabels={}, menuItems={}):
 def add_local_dir(name, url, logo='', infoLabels={}, menuItems={}):
     name = decode_html(name)
     infoLabels['Title'] = name
-    liz = xbmcgui.ListItem(name, iconImage='DefaultFolder.png', thumbnailImage=logo)
+    liz = xbmcgui.ListItem(name)
+    liz.setArt({'icon': 'DefaultFolder.png', 'thumb': logo})
     liz.setInfo(type='Video', infoLabels=infoLabels)
     items = []
     for mi in list(menuItems.keys()):
@@ -137,7 +139,8 @@ def add_video(name, params={}, logo='', infoLabels={}, menuItems={}):
     if not 'Title' in infoLabels:
         infoLabels['Title'] = name
     url = _create_plugin_url(params)
-    li = xbmcgui.ListItem(name, path=url, iconImage='DefaultVideo.png', thumbnailImage=logo)
+    li = xbmcgui.ListItem(name, path=url)
+    li.setArt({'icon': 'DefaultVideo.png', 'thumb': logo})
     li.setInfo(type='Video', infoLabels=infoLabels)
     # remove WARNING: XFILE::CFileFactory::CreateLoader - unsupported
     # protocol(plugin) in plugin://....
@@ -336,7 +339,7 @@ def search_list(cache):
 
 
 def get_searches(addon, server):
-    local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    local = xbmc.translatePath(addon.getAddonInfo('profile'))
     c_local = compat_path(local)
     if not os.path.exists(c_local):
         os.makedirs(c_local)

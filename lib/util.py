@@ -243,7 +243,7 @@ try:
         xbmc.log(str([text]), xbmc.LOGDEBUG)
 
     def info(text):
-        xbmc.log(str([text]), xbmc.LOGNOTICE)
+        xbmc.log(str([text]), xbmc.LOGINFO)
 
     def error(text):
         xbmc.log(str([text]), xbmc.LOGERROR)
