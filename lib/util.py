@@ -103,7 +103,7 @@ def request(url, headers={}):
         _cookie_jar.add_cookie_header(req)
     try:
         response = urllib.request.urlopen(req)
-        data = response.read()
+        data = response.read().decode('utf-8')
         response.close()
     except urllib.error.HTTPError as error:
         data = _solve_http_errors(url, error)
@@ -243,7 +243,7 @@ try:
         xbmc.log(str([text]), xbmc.LOGDEBUG)
 
     def info(text):
-        xbmc.log(str([text]), xbmc.LOGNOTICE)
+        xbmc.log(str([text]), xbmc.LOGINFO)
 
     def error(text):
         xbmc.log(str([text]), xbmc.LOGERROR)
@@ -310,7 +310,7 @@ def params(url=None):
             if (len(splitparams)) == 2:
                 param[splitparams[0]] = splitparams[1]
     for p in list(param.keys()):
-        param[p] = param[p].decode('hex')
+        param[p] = bytes.fromhex(param[p]).decode('utf-8')
     return param
 
 

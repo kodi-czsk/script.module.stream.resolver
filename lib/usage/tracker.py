@@ -34,7 +34,7 @@ class TrackerSettings(object):
 
     def __init__(self, addon):
         self.services = [googletracker]
-        local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+        local = xbmc.translatePath(addon.getAddonInfo('profile'))
         c_local = xbmcutil.compat_path(local)
         if not os.path.exists(c_local):
             os.makedirs(c_local)
