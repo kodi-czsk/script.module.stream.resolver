@@ -225,7 +225,7 @@ def set_subtitles(listItem, url, headers=None):
 def load_subtitles(url, headers=None):
     util.info('Downloading subtitles and load them to player...')
     if not (url == '' or url == None):
-        local = xbmc.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
+        local = xbmcvfs.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
         c_local = compat_path(local)
         if not os.path.exists(c_local):
             os.makedirs(c_local)
@@ -340,7 +340,7 @@ def search_list(cache):
 
 
 def get_searches(addon, server):
-    local = xbmc.translatePath(addon.getAddonInfo('profile'))
+    local = xbmcvfs.translatePath(addon.getAddonInfo('profile'))
     c_local = compat_path(local)
     if not os.path.exists(c_local):
         os.makedirs(c_local)
@@ -356,7 +356,7 @@ def get_searches(addon, server):
 
 def add_search(addon, server, search, maximum):
     searches = []
-    local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    local = xbmcvfs.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
     c_local = compat_path(local)
     if not os.path.exists(c_local):
         os.makedirs(c_local)
@@ -379,7 +379,7 @@ def add_search(addon, server, search, maximum):
 
 
 def delete_search_history(addon, server):
-    local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    local = xbmcvfs.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
     c_local = compat_path(local)
     if not os.path.exists(c_local):
         return
@@ -389,7 +389,7 @@ def delete_search_history(addon, server):
 
 
 def remove_search(addon, server, search):
-    local = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    local = xbmcvfs.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
     c_local = compat_path(local)
     if not os.path.exists(c_local):
         return

@@ -36,10 +36,9 @@ class TrackerSettings(object):
     def __init__(self, addon):
         self.services = [googletracker]
         local = xbmcvfs.translatePath(addon.getAddonInfo('profile'))
-        c_local = xbmcutil.compat_path(local)
-        if not os.path.exists(c_local):
-            os.makedirs(c_local)
-        self.settingFile = xbmcutil.compat_path(os.path.join(local, 'tracking.json'))
+        if not os.path.exists(local):
+            os.makedirs(local)
+        self.settingFile = os.path.join(local, 'tracking.json')
 
         if os.path.exists(self.settingFile):
             f = open(self.settingFile, 'r')
