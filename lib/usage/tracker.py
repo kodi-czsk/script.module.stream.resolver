@@ -21,6 +21,7 @@
 # */
 import json
 import xbmc
+import xbmcvfs
 import os
 import random
 import sys
@@ -34,18 +35,17 @@ class TrackerSettings(object):
 
     def __init__(self, addon):
         self.services = [googletracker]
-        local = xbmc.translatePath(addon.getAddonInfo('profile'))
-        c_local = xbmcutil.compat_path(local)
-        if not os.path.exists(c_local):
-            os.makedirs(c_local)
-        self.settingFile = xbmcutil.compat_path(os.path.join(local, 'tracking.json'))
+        local = xbmcvfs.translatePath(addon.getAddonInfo('profile'))
+        if not os.path.exists(local):
+            os.makedirs(local)
+        self.settingFile = os.path.join(local, 'tracking.json')
 
         if os.path.exists(self.settingFile):
             f = open(self.settingFile, 'r')
             file_content = f.read()
             f.close()
             try:
-                self.data = json.loads(str(file_content.decode('utf-8', 'ignore')))
+                self.data = json.loads(file_content)
             except:
                 self.data = {}
                 self.data['id'] = {}

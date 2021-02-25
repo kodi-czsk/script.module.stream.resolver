@@ -28,6 +28,7 @@ import resolver
 import time
 import xbmcplugin
 import xbmc
+import xbmcvfs
 import xbmcgui
 import urllib.parse
 import urllib.request, urllib.parse, urllib.error
@@ -372,7 +373,7 @@ class XBMCLoginOptionalContentProvider(XBMContentProvider):
         self.check_setting_keys(['vip'])
 
     def ask_for_captcha(self, params):
-        img = os.path.join(str(xbmc.translatePath(
+        img = os.path.join(str(xbmcvfs.translatePath(
             self.addon.getAddonInfo('profile'))), 'captcha.png')
         util.save_to_file(params['img'], img)
         cd = CaptchaDialog('captcha-dialog.xml',

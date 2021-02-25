@@ -1,0 +1,82 @@
+# Kodi Media Center language file
+# Addon Name: Stream Resolver
+# Addon id: script.module.stream.resolver
+# Addon Provider: Libor Zoubek
+msgid ""
+msgstr ""
+"Project-Id-Version: Kodi Addons\n"
+"Report-Msgid-Bugs-To: https://forum.kodi.tv/\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Kodi Translation Team\n"
+"Language-Team: Team-Kodi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sk_SK\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+msgctxt "#200"
+msgid "Captcha requested"
+msgstr "Vyžaduje sa prepísanie kódu na obrázku"
+
+msgctxt "#201"
+msgid "Please wait..."
+msgstr "Čakajte..."
+
+msgctxt "#30003"
+msgid "[B]Search[/B]"
+msgstr "[B]Vyhľadať[/B]"
+
+msgctxt "#30004"
+msgid "[B]New search[/B]"
+msgstr "[B]Nové hľadanie[/B]"
+
+msgctxt "#30005"
+msgid "Select video source"
+msgstr "Vyberte zdroj"
+
+msgctxt "#30006"
+msgid "[B]Downloaded files[/B]"
+msgstr "[B]Stiahnuté súbory[/B]"
+
+msgctxt "#30007"
+msgid "[B]Next[/B]"
+msgstr "[B]Ďalšie[/B]"
+
+msgctxt "#30008"
+msgid "[B]Previous[/B]"
+msgstr "[B]Predchádzajúce[/B]"
+
+msgctxt "#30009"
+msgid "Please setup download folder"
+msgstr "Nastavte prosím priečinok pre sťahovania"
+
+msgctxt "#30010"
+msgid "Do you wish to use VIP account to get this file?"
+msgstr "Chcete pre stiahnutie súboru použiť VIP účet?"
+
+msgctxt "#30011"
+msgid "Login failed, please check addon settings"
+msgstr "Prihlásenie sa nepodarilo, skontrolujte nastavenia"
+
+msgctxt "#30012"
+msgid "[B]Latest videos[/B]"
+msgstr "[B]Najnovšie videá[/B]"
+
+msgctxt "#30013"
+msgid "[B]Top videos[/B]"
+msgstr "[B]Najsledovanejšie videá[/B]"
+
+msgctxt "#30014"
+msgid "Waiting for file %ss"
+msgstr "Čakanie na súbor %ss"
+
+msgctxt "#30015"
+msgid "Do you want to enable usage tracking?"
+msgstr "Prajete si povoliť zasielanie údajov o použití?"
+
+msgctxt "#30016"
+msgid "Find similar"
+msgstr "Hľadať podobné"
+
