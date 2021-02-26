@@ -549,10 +549,12 @@ def replace_diacritic(string):
 
 
 def compat_path(path):
-    if sys.platform.startswith('win'):
-        if isinstance(path, str):
-            path = path.decode('utf-8')
-    else:
-        if isinstance(path, str):
-            path = path.encode('utf-8')
     return path
+    #no longer needed in python 3
+    #if sys.platform.startswith('win'):
+    #    if isinstance(path, str):
+    #        path = path.decode('utf-8')
+    #else:
+    #    if isinstance(path, str):
+    #        path = path.encode('utf-8')
+    #return path
