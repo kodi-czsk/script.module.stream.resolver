@@ -22,8 +22,8 @@
 # uses code fragments from https://github.com/LordVenom/venom-xbmc-addons
 import re
 import util
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 from aadecode import AADecoder
 
 class cRequestHandler:
@@ -68,7 +68,7 @@ class cRequestHandler:
         return self.__callRequest()
 
     def getRequestUri(self):
-        return self.__sUrl + '?' + urllib.urlencode(self.__aParamaters)
+        return self.__sUrl + '?' + urllib.parse.urlencode(self.__aParamaters)
 
     def __setDefaultHeader(self):
         UA = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de-DE; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
@@ -77,7 +77,7 @@ class cRequestHandler:
         self.addHeaderEntry('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')
 
     def __callRequest(self):
-        sParameters = urllib.urlencode(self.__aParamaters)
+        sParameters = urllib.parse.urlencode(self.__aParamaters)
 
         if (self.__cType == cRequestHandler.REQUEST_TYPE_GET):
             if (len(sParameters) > 0):
@@ -89,18 +89,18 @@ class cRequestHandler:
                     sParameters = ''
 
         if (len(sParameters) > 0):
-            oRequest = urllib2.Request(self.__sUrl, sParameters)
+            oRequest = urllib.request.Request(self.__sUrl, sParameters)
         else:
-            oRequest = urllib2.Request(self.__sUrl)
+            oRequest = urllib.request.Request(self.__sUrl)
 
         for aHeader in self.__aHeaderEntries:
-                for sHeaderKey, sHeaderValue in aHeader.items():
+                for sHeaderKey, sHeaderValue in list(aHeader.items()):
                     oRequest.add_header(sHeaderKey, sHeaderValue)
 
         sContent = ''
 
         try:
-            oResponse = urllib2.urlopen(oRequest, timeout=30)
+            oResponse = urllib.request.urlopen(oRequest, timeout=30)
             sContent = oResponse.read()
 
             self.__sResponseHeader = oResponse.info()
@@ -108,7 +108,7 @@ class cRequestHandler:
 
             oResponse.close()
 
-        except urllib2.HTTPError, e:
+        except urllib.error.HTTPError as e:
             if e.code == 503:
                 if cloudflare.CheckIfActive(e.headers):
                     cookies = e.headers['Set-Cookie']
@@ -133,7 +133,7 @@ class cRequestHandler:
         return sContent
 
     def getHeaderLocationUrl(self):
-        opened = urllib.urlopen(self.__sUrl)
+        opened = urllib.request.urlopen(self.__sUrl)
         return opened.geturl()
 
 class cParser:
@@ -267,8 +267,8 @@ def resolve(url):
             UA = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0'
             headers = {'User-Agent': UA }
 
-            req = urllib2.Request(api_call,None,headers)
-            res = urllib2.urlopen(req)
+            req = urllib.request.Request(api_call,None,headers)
+            res = urllib.request.urlopen(req)
             finalurl = res.geturl()
             api_call = finalurl
 

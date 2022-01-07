@@ -22,9 +22,8 @@
 #  the Free Software Foundation; version 3
 
 import re
-import urllib
-import urllib2
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 import util
 import xbmc
 
@@ -32,7 +31,7 @@ MAX_TRIES = 3
 COMPONENT = __name__
 
 
-class NoRedirection(urllib2.HTTPErrorProcessor):
+class NoRedirection(urllib.request.HTTPErrorProcessor):
 
     def http_response(self, request, response):
         util.info('[CF] Stopping Redirect')
@@ -61,18 +60,18 @@ def solve(url, cj, user_agent=None, wait=True):
             cj.load(ignore_discard=True)
         except:
             pass
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        urllib2.install_opener(opener)
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+        urllib.request.install_opener(opener)
 
-    scheme = urlparse.urlparse(url).scheme
-    domain = urlparse.urlparse(url).hostname
-    request = urllib2.Request(url)
+    scheme = urllib.parse.urlparse(url).scheme
+    domain = urllib.parse.urlparse(url).hostname
+    request = urllib.request.Request(url)
     for key in headers:
         request.add_header(key, headers[key])
     try:
-        response = urllib2.urlopen(request)
+        response = urllib.request.urlopen(request)
         html = response.read()
-    except urllib2.HTTPError as e:
+    except urllib.error.HTTPError as e:
         html = e.read()
 
     tries = 0
@@ -140,17 +139,17 @@ def solve(url, cj, user_agent=None, wait=True):
 
         url = \
             '%s://%s/cdn-cgi/l/chk_jschl?s=%s&jschl_vc=%s&pass=%s&jschl_answer=%s' \
-            % (scheme, domain, urllib.quote(s), urllib.quote(vc), urllib.quote(password), urllib.quote(result))
+            % (scheme, domain, urllib.parse.quote(s), urllib.parse.quote(vc), urllib.parse.quote(password), urllib.parse.quote(result))
         # util.info('[CF] url: %s' % url)
         # util.debug('[CF] headers: {0}'.format(headers))
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         for key in headers:
             request.add_header(key, headers[key])
 
         try:
-            opener = urllib2.build_opener(NoRedirection)
-            urllib2.install_opener(opener)
-            response = urllib2.urlopen(request)
+            opener = urllib.request.build_opener(NoRedirection)
+            urllib.request.install_opener(opener)
+            response = urllib.request.urlopen(request)
             # util.info('[CF] code: {}'.format(response.getcode()))
             while response.getcode() in [301, 302, 303, 307]:
                 if cj is not None:
@@ -159,15 +158,15 @@ def solve(url, cj, user_agent=None, wait=True):
                 redir_url = response.info().getheader('location')
                 if not redir_url.startswith('http'):
                     base_url = '%s://%s' % (scheme, domain)
-                    redir_url = urlparse.urljoin(base_url, redir_url)
+                    redir_url = urllib.parse.urljoin(base_url, redir_url)
 
-                request = urllib2.Request(redir_url)
+                request = urllib.request.Request(redir_url)
                 for key in headers:
                     request.add_header(key, headers[key])
                 if cj is not None:
                     cj.add_cookie_header(request)
 
-                response = urllib2.urlopen(request)
+                response = urllib.request.urlopen(request)
             final = response.read()
             if 'cf-browser-verification' in final:
                 util.info('[CF] Failure: html: %s url: %s' % (html, url))
@@ -175,11 +174,11 @@ def solve(url, cj, user_agent=None, wait=True):
                 html = final
             else:
                 break
-        except urllib2.HTTPError as e:
+        except urllib.error.HTTPError as e:
             util.info('[CF] HTTP Error: %s on url: %s' % (e.code,
                       url))
             return False
-        except urllib2.URLError as e:
+        except urllib.error.URLError as e:
             util.info('[CF] URLError Error: %s on url: %s' % (e,
                       url))
             return False

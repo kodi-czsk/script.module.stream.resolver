@@ -45,7 +45,7 @@ class TrackerSettings(object):
             file_content = f.read()
             f.close()
             try:
-                self.data = json.loads(unicode(file_content.decode('utf-8', 'ignore')))
+                self.data = json.loads(str(file_content.decode('utf-8', 'ignore')))
             except:
                 self.data = {}
                 self.data['id'] = {}
@@ -55,7 +55,7 @@ class TrackerSettings(object):
                 self.save()
 
             for serv in self.services:
-                if not serv.__name__ in self.data['id'].keys():
+                if not serv.__name__ in list(self.data['id'].keys()):
                     self.data['id'][serv.__name__] = serv.createInstanceID()
                     self.save()
         else:
@@ -113,7 +113,7 @@ class TrackerInfo(object):
         if platform.startswith('darwin'):
             return 'KODI/%s (Mac; U; Intel Mac OS X; %s)' % (version, language)
         else:
-            print '[script.usage.tracker] Unknown platform %s, please report a bug, plugin needs to be fixed' % sys.platform
+            print('[script.usage.tracker] Unknown platform %s, please report a bug, plugin needs to be fixed' % sys.platform)
             return 'KODI/%s (X11; U; Unknown i686; %s)' % (version, language)
 
     def getSystemInfo(self):
@@ -227,5 +227,5 @@ def getLanguageCode(id):
     id = id.lower()
     if id in languages:
         return languages[id]
-    print '[script.usage.tracker] Cannot detect language code from language: %s, please report a bug, plugin needs to be fixed' % id
+    print('[script.usage.tracker] Cannot detect language code from language: %s, please report a bug, plugin needs to be fixed' % id)
     return id

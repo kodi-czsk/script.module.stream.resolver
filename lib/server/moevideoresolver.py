@@ -19,7 +19,7 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re,util,urllib2,urlparse
+import re,util,urllib.request,urllib.error,urllib.parse,urllib.parse
 __name__ = 'moevideo'
 def supports(url):
     return not _regex(url) == None
@@ -32,7 +32,7 @@ def url(url):
         post = {'r':'["tVL0gjqo5",["preview/flv_image",{"uid":"'+id+'"}],["preview/flv_link",{"uid":"'+id+'"}]]'}
         data = util.post('http://api.letitbit.net',post)
         data = data.replace('\\','')
-        print data
+        print(data)
         link = re.search('link\"\:\"(?P<link>[^\"]+)',data)
         if link:
             return [{'url':link.group('link')}]

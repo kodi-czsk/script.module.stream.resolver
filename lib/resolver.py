@@ -34,7 +34,7 @@ for module in os.listdir(os.path.join(os.path.dirname(__file__), 'server')):
     if module == '__init__.py' or module[-3:] != '.py':
         continue
     module = module[:-3]
-    exec 'import %s' % module
+    exec('import %s' % module)
     resolver = eval(module)
     util.debug('found %s %s' % (resolver, dir(resolver)))
 
@@ -75,12 +75,12 @@ def resolve(url):
 
     def fix_stream(i, url, resolver, default):
         """ fix  missing but required values """
-        if 'name' not in i.keys():
+        if 'name' not in list(i.keys()):
             i['name'] = resolver.__name__
-        if 'surl' not in i.keys():
+        if 'surl' not in list(i.keys()):
             i['surl'] = url
-        for key in default.keys():
-            if key not in i.keys():
+        for key in list(default.keys()):
+            if key not in list(i.keys()):
                 i[key] = default[key]
 
     [fix_stream(i, url, resolver, default) for i in value]
@@ -132,7 +132,7 @@ def findstreams(data, regexes=None):
     resolvables = []
     resolved = []
     not_found = False
-    if isinstance(data, basestring) and regexes:
+    if isinstance(data, str) and regexes:
         for regex in regexes:
             for match in re.finditer(regex, data, re.IGNORECASE | re.DOTALL):
                 urls.append(match.group('url'))
@@ -161,12 +161,12 @@ def findstreams(data, regexes=None):
         elif len(streams) > 0:
             for stream in streams:
                 if isinstance(url, dict):
-                    for key in url.keys():
+                    for key in list(url.keys()):
                         if key not in stream:
                             stream[key] = url[key]
                         elif key not in item():
-                            if isinstance(stream[key], basestring) and \
-                                    isinstance(url[key], basestring):
+                            if isinstance(stream[key], str) and \
+                                    isinstance(url[key], str):
                                 stream[key] = url[key] + ' +' + stream[key]
                             elif isinstance(stream[key], list) and \
                                     isinstance(url[key], list):
@@ -196,23 +196,23 @@ def filter_by_quality(resolved, q):
     ret = []
     # first group streams by source url
     for item in resolved:
-        if item['surl'] in sources.keys():
+        if item['surl'] in list(sources.keys()):
             sources[item['surl']].append(item)
         else:
             sources[item['surl']] = [item]
     if q == '1':
         # always return best quality from each source
-        for key in sources.keys():
+        for key in list(sources.keys()):
             ret.append(sources[key][0])
     elif q == '2':
         # always return worse quality from each source
-        for key in sources.keys():
+        for key in list(sources.keys()):
             ret.append(sources[key][-1])
     else:
         # we try to select sources of desired qualities
         quality = q_map[q]
         # 3,4,5 are 720,480,360
-        for key in sources.keys():
+        for key in list(sources.keys()):
             added = False
             for item in sources[key]:
                 if quality == item['quality']:
@@ -260,7 +260,7 @@ def findstreams_multi(data, regexes):
     error = False
     for regex in regexes:
         for match in re.finditer(regex, data, re.IGNORECASE | re.DOTALL):
-            print 'Found resolvable %s ' % match.group('url')
+            print('Found resolvable %s ' % match.group('url'))
             streams = resolve(match.group('url'))
             if isinstance(streams, list) and streams:
                 util.debug('There was an error resolving ' + match.group('url'))
@@ -279,11 +279,11 @@ def findstreams_multi(data, regexes):
     resolved2.reverse()
     qualities = {}
     for item in resolved2:
-        if item['quality'] in qualities.keys():
+        if item['quality'] in list(qualities.keys()):
             qualities[item['quality']].append(item)
         else:
             qualities[item['quality']] = [item]
     # now .. we must sort items to be in same order as they were found on page
-    for q in qualities.keys():
+    for q in list(qualities.keys()):
         qualities[q] = sorted(qualities[q], key=lambda i: resolved.index(i))
     return qualities

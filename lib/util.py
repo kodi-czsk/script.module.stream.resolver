@@ -22,13 +22,13 @@
 import os
 import re
 import sys
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import traceback
-import cookielib
-from htmlentitydefs import name2codepoint as n2cp
+import http.cookiejar
+from html.entities import name2codepoint as n2cp
 import threading
-import Queue
+import queue
 import pickle
 import string
 import json
@@ -45,11 +45,11 @@ _cookie_jar = None
 CACHE_COOKIES = 'cookies'
 
 
-class _StringCookieJar(cookielib.LWPCookieJar):
+class _StringCookieJar(http.cookiejar.LWPCookieJar):
 
     def __init__(self, string=None, filename=None, delayload=False, policy=None, cache=None):
         self.cache = cache
-        cookielib.LWPCookieJar.__init__(self, filename, delayload, policy)
+        http.cookiejar.LWPCookieJar.__init__(self, filename, delayload, policy)
         if string and len(string) > 0:
             self._cookies = pickle.loads(str(string))
 
@@ -68,8 +68,8 @@ def init_urllib(cache=None):
         _cookie_jar = _StringCookieJar(data, cache=cache)
     else:
         _cookie_jar = _StringCookieJar(data)
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cookie_jar))
-    urllib2.install_opener(opener)
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cookie_jar))
+    urllib.request.install_opener(opener)
 
 
 def cache_cookies(cache=None):
@@ -97,31 +97,31 @@ def _solve_http_errors(url, error):
 
 def request(url, headers={}):
     debug('request: %s' % url)
-    req = urllib2.Request(url, headers=headers)
+    req = urllib.request.Request(url, headers=headers)
     req.add_header('User-Agent', UA)
     if _cookie_jar is not None:
         _cookie_jar.add_cookie_header(req)
     try:
-        response = urllib2.urlopen(req)
+        response = urllib.request.urlopen(req)
         data = response.read()
         response.close()
-    except urllib2.HTTPError, error:
+    except urllib.error.HTTPError as error:
         data = _solve_http_errors(url, error)
     debug('len(data) %s' % len(data))
     return data
 
 
 def post(url, data, headers={}):
-    postdata = urllib.urlencode(data)
-    req = urllib2.Request(url, postdata, headers)
+    postdata = urllib.parse.urlencode(data)
+    req = urllib.request.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
     if _cookie_jar is not None:
         _cookie_jar.add_cookie_header(req)
     try:
-        response = urllib2.urlopen(req)
+        response = urllib.request.urlopen(req)
         data = response.read()
         response.close()
-    except urllib2.HTTPError, error:
+    except urllib.error.HTTPError as error:
         data = _solve_http_errors(url, error)
     return data
 
@@ -129,21 +129,21 @@ def post(url, data, headers={}):
 def post_json(url, data, headers={}):
     postdata = json.dumps(data)
     headers['Content-Type'] = 'application/json'
-    req = urllib2.Request(url, postdata, headers)
+    req = urllib.request.Request(url, postdata, headers)
     req.add_header('User-Agent', UA)
     if _cookie_jar is not None:
         _cookie_jar.add_cookie_header(req)
     try:
-        response = urllib2.urlopen(req)
+        response = urllib.request.urlopen(req)
         data = response.read()
         response.close()
-    except urllib2.HTTPError, error:
+    except urllib.error.HTTPError as error:
         data = _solve_http_errors(url, error)
     return data
 
 
 def run_parallel_in_threads(target, args_list):
-    result = Queue.Queue()
+    result = queue.Queue()
     # wrapper to collect return value in a Queue
 
     def task_wrapper(*args):
@@ -169,7 +169,7 @@ def substr(data, start, end):
 
 def _create_plugin_url(params, plugin=sys.argv[0]):
     url = []
-    for key in params.keys():
+    for key in list(params.keys()):
         value = decode_html(params[key])
         value = value.encode('ascii', 'ignore')
         url.append(key + '=' + value.encode('hex', ) + '&')
@@ -209,15 +209,15 @@ def _substitute_entity(match):
         # decoding by number
         if match.group(2) == '':
             # number is in decimal
-            return unichr(int(ent))
+            return chr(int(ent))
         elif match.group(2) == 'x':
             # number is in hex
-            return unichr(int('0x' + ent, 16))
+            return chr(int('0x' + ent, 16))
     else:
         # they were using a name
         cp = n2cp.get(ent)
         if cp:
-            return unichr(cp)
+            return chr(cp)
         else:
             return match.group()
 
@@ -226,13 +226,13 @@ def decode_html(data):
     if not type(data) == str:
         return data
     try:
-        if not type(data) == unicode:
-            data = unicode(data, 'utf-8', errors='ignore')
+        if not type(data) == str:
+            data = str(data, 'utf-8', errors='ignore')
         entity_re = re.compile(r'&(#?)(x?)(\w+);')
         return entity_re.subn(_substitute_entity, data)[0]
     except:
         traceback.print_exc()
-        print[data]
+        print([data])
         return data
 
 
@@ -250,35 +250,35 @@ try:
 except:
     def debug(text):
         if LOG > 1:
-            print('[DEBUG] ' + str([text]))
+            print(('[DEBUG] ' + str([text])))
 
     def info(text):
         if LOG > 0:
-            print('[INFO] ' + str([text]))
+            print(('[INFO] ' + str([text])))
 
     def error(text):
-        print('[ERROR] ' + str([text]))
+        print(('[ERROR] ' + str([text])))
 
-_diacritic_replace = {u'\u00f3': 'o',
-                      u'\u0213': '-',
-                      u'\u00e1': 'a',
-                      u'\u010d': 'c',
-                      u'\u010c': 'C',
-                      u'\u010f': 'd',
-                      u'\u010e': 'D',
-                      u'\u00e9': 'e',
-                      u'\u011b': 'e',
-                      u'\u00ed': 'i',
-                      u'\u0148': 'n',
-                      u'\u0159': 'r',
-                      u'\u0161': 's',
-                      u'\u0165': 't',
-                      u'\u016f': 'u',
-                      u'\u00fd': 'y',
-                      u'\u017e': 'z',
-                      u'\xed': 'i',
-                      u'\xe9': 'e',
-                      u'\xe1': 'a',
+_diacritic_replace = {'\u00f3': 'o',
+                      '\u0213': '-',
+                      '\u00e1': 'a',
+                      '\u010d': 'c',
+                      '\u010c': 'C',
+                      '\u010f': 'd',
+                      '\u010e': 'D',
+                      '\u00e9': 'e',
+                      '\u011b': 'e',
+                      '\u00ed': 'i',
+                      '\u0148': 'n',
+                      '\u0159': 'r',
+                      '\u0161': 's',
+                      '\u0165': 't',
+                      '\u016f': 'u',
+                      '\u00fd': 'y',
+                      '\u017e': 'z',
+                      '\xed': 'i',
+                      '\xe9': 'e',
+                      '\xe1': 'a',
                       }
 
 
@@ -309,7 +309,7 @@ def params(url=None):
             splitparams = pairsofparams[i].split('=')
             if (len(splitparams)) == 2:
                 param[splitparams[0]] = splitparams[1]
-    for p in param.keys():
+    for p in list(param.keys()):
         param[p] = param[p].decode('hex')
     return param
 
@@ -344,7 +344,7 @@ def extract_jwplayer_setup(data):
     if data:
         replacements = data.group(2).split('|')
         data = data.group(1)
-        for i in reversed(range(len(replacements))):
+        for i in reversed(list(range(len(replacements)))):
             if len(replacements[i]) > 0:
                 data = re.sub(r'\b%s\b' % int_to_base(i, 36), replacements[i], data)
         data = re.search(r'\.setup\(([^\)]+?)\);', data)

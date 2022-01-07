@@ -19,32 +19,32 @@
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
 # */
-import re,util,urllib2,traceback,resolver
+import re,util,urllib.request,urllib.error,urllib.parse,traceback,resolver
 
 __name__ = 'mixturecloud'
 
 def supports(url):
     return not _regex(url) == None
 
-class MyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+class MyHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
 
     def http_error_302(self, req, fp, code, msg, headers):
         self.location = headers.getheader('Location')
-        return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
+        return urllib.request.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
 
 # returns the steam url
 def resolve(url):
     m = _regex(url)
     if m:
-        defrhandler = urllib2.HTTPRedirectHandler
-        cookieprocessor = urllib2.HTTPCookieProcessor()
+        defrhandler = urllib.request.HTTPRedirectHandler
+        cookieprocessor = urllib.request.HTTPCookieProcessor()
         redirecthandler = MyHTTPRedirectHandler()
-        opener = urllib2.build_opener(redirecthandler, cookieprocessor)
-        urllib2.install_opener(opener)
-        req = urllib2.Request(url)
-        response = urllib2.urlopen(req)
+        opener = urllib.request.build_opener(redirecthandler, cookieprocessor)
+        urllib.request.install_opener(opener)
+        req = urllib.request.Request(url)
+        response = urllib.request.urlopen(req)
         response.close()
-        urllib2.install_opener(urllib2.build_opener(defrhandler,cookieprocessor))
+        urllib.request.install_opener(urllib.request.build_opener(defrhandler,cookieprocessor))
         # mixturevideo uses REDIRECT to 'secret url' ;-)
         url = redirecthandler.location
         item = resolver.item()

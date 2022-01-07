@@ -11,12 +11,12 @@
 # *  original based on https://gitorious.org/iptv-pl-dla-openpli/ urlresolver
 # *  update based on https://github.com/LordVenom/
 # */
-from StringIO import StringIO
+from io import StringIO
 import json
 import util
 import re
 import base64
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 __name__ = 'hqq'
 
@@ -51,12 +51,12 @@ def _decode(data):
             o2 = bits >> 8 & 0xff
             o3 = bits & 0xff
             if h3 == 64:
-                enc += unichr(o1)
+                enc += chr(o1)
             else:
                 if h4 == 64:
-                    enc += unichr(o1) + unichr(o2)
+                    enc += chr(o1) + chr(o2)
                 else:
-                    enc += unichr(o1) + unichr(o2) + unichr(o3)
+                    enc += chr(o1) + chr(o2) + chr(o3)
             if i >= len(string):
                 break
         return enc
@@ -175,8 +175,8 @@ def resolve(url):
             get_data = {'iss': jsonIp, 'vid': vid, 'at': at.group(1), 'autoplayed': 'yes', 'referer': 'on',
                         'http_referer': '', 'pass': '', 'embed_from' : '', 'need_captcha' : '0' }
 
-            data = urllib.unquote(util.request("http://hqq.tv/sec/player/embed_player.php?" +
-                                               urllib.urlencode(get_data), headers))
+            data = urllib.parse.unquote(util.request("http://hqq.tv/sec/player/embed_player.php?" +
+                                               urllib.parse.urlencode(get_data), headers))
 
             l = re.search(r'link_1: ([a-zA-Z]+), server_1: ([a-zA-Z]+)', data)
             vid_server = re.search(r'var ' + l.group(2) + ' = "([^"]+)"', data).group(1)
@@ -186,7 +186,7 @@ def resolve(url):
                 get_data = {'server_1': vid_server, 'link_1': vid_link, 'at': at.group(1), 'adb': '0/',
                             'b': '1', 'vid': vid }
                 headers['x-requested-with'] = 'XMLHttpRequest'
-                data = util.request("http://hqq.tv/player/get_md5.php?" + urllib.urlencode(get_data), headers)
+                data = util.request("http://hqq.tv/player/get_md5.php?" + urllib.parse.urlencode(get_data), headers)
                 jsonData = json.loads(data)
                 encodedm3u = jsonData['file']
                 decodedm3u = _decode2(encodedm3u.replace('\\', ''))
@@ -205,7 +205,7 @@ def _regex(url):
         return match
     match = re.search(r'(hqq|netu)\.tv/player/hash\.php\?hash=\d+', url)
     if match:
-        match = re.search(r'var\s+vid\s*=\s*\'(?P<vid>[^\']+)\'', urllib.unquote(util.request(url)))
+        match = re.search(r'var\s+vid\s*=\s*\'(?P<vid>[^\']+)\'', urllib.parse.unquote(util.request(url)))
         if match:
             return match
     b64enc = re.search(r'data:text/javascript\;charset\=utf\-8\;base64([^\"]+)', url)

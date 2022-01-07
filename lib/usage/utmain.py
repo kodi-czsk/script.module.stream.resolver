@@ -22,10 +22,10 @@
 import os
 import re
 import sys
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import traceback
-import cookielib
+import http.cookiejar
 import xbmc
 import xbmcaddon
 import xbmcgui
@@ -65,11 +65,11 @@ def trackUsage(params):
         if not xbmcaddon.Addon(params['id']).getAddonInfo('id') == params['id']:
             raise Exception('')
     except:
-        print 'Unable to create addon instance for %s, invalid addon ID?!' % (params['id'])
+        print('Unable to create addon instance for %s, invalid addon ID?!' % (params['id']))
         return
 
     if register(params):
-        print 'Tracking usage ...'
+        print('Tracking usage ...')
         sett = tracker.TrackerSettings(__addon__)
         info = tracker.TrackerInfo().getSystemInfo()
         # retrieve per-installation-unique ID
@@ -77,7 +77,7 @@ def trackUsage(params):
         if 'google' == params['service']:
             return googletracker.track_usage(params['host'], params['action'], params['tc'], params['dry'], info)
     else:
-        print 'Reporting for %s disabled by user' % (params['id'])
+        print('Reporting for %s disabled by user' % (params['id']))
 
 
 def register(params):

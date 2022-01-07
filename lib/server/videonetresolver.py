@@ -42,7 +42,7 @@ def latin2text(word):
                 '&#xfd;' : 'ý',
                 '&#x17e;': 'ž',
                 }
-    for key in dict_hex.keys():
+    for key in list(dict_hex.keys()):
         word = word.replace(key,dict_hex[key])
     return word
 	

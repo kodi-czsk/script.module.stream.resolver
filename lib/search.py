@@ -65,12 +65,12 @@ def item(items={},label=xbmcutil.__lang__(30003)):
 
 def main(addon,history,p,callback,key=None,value=None):
 	if (key==None) or (key in p and p[key] == value):
-		if 'search-list' in p.keys():
+		if 'search-list' in list(p.keys()):
 			_list(addon,history,key,value)
-		if 'search' in p.keys():
+		if 'search' in list(p.keys()):
 			update_history=True
-			if 'search-no-history' in p.keys():
+			if 'search-no-history' in list(p.keys()):
 				update_history=False
 			_search(addon,history,p['search'],update_history,callback)
-		if 'search-remove' in p.keys():
+		if 'search-remove' in list(p.keys()):
 			_remove(addon,history,p['search-remove'])

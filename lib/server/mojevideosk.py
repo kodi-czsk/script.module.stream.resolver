@@ -36,8 +36,8 @@ def resolve(url):
     cookies = {}
     util.init_urllib(cookies)
     data = util.request(url)
-    view = pickle.loads(util._cookie_jar.dump())[
-        '.mojevideo.sk']['/'].keys()[0]
+    view = list(pickle.loads(util._cookie_jar.dump())[
+        '.mojevideo.sk']['/'].keys())[0]
     st = re.search(r'vHash=\[\'([^\']+)', data)
     if not st:
         return None
