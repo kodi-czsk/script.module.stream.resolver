@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-#/*
 # *      Copyright (C) 2011 Libor Zoubek
 # *
 # *
@@ -18,24 +17,55 @@
 # *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 # *  http://www.gnu.org/copyleft/gpl.html
 # *
-# */
-import re,util
+import re
+import util
+import json
 __name__ = 'rutube'
-def supports(url):
-	return not _regex(url) == None
 
-# returns the steam url
+
+def supports(url):
+    return not _regex(url) is None
+
+
+# returns the stream url
 def url(url):
-	m = _regex(url)
-	if m:
-		data = util.request('http://rutube.ru/trackinfo/'+m.group('id')+'.xml')
-		n = re.search('<m3u8>([^<]+)',data,re.IGNORECASE | re.DOTALL)
-		if not n == None:
-			return [n.group(1).strip()]
+    m = _regex(url)
+    if m:
+        data = util.request('http://rutube.ru/' + m.group(1) + '/' +
+                            m.group(2))
+        n = re.search('canonical" href="(?P<url>https://rutube.ru/[^"]+)"',
+                      data,
+                      re.IGNORECASE | re.DOTALL)
+        nurl = n.group('url')
+        print('url: %s' % nurl)
+        n = re.search(r'/(?P<id>[\da-z]{32})/?$', nurl,
+                      re.IGNORECASE | re.DOTALL)
+        id = n.group('id')
+        print('id: %s' % id)
+        data = util.request('https://rutube.ru/api/play/options/%s/?format=json' % id)
+        jsondata = json.loads(data)
+        nurl = jsondata['video_balancer']['m3u8']
+        data = util.request(nurl)
+        result = []
+        for line in data.splitlines():
+            if 'http' in line:
+                result.append(line.strip())
+
+        return result
+
 
 def resolve(u):
-	stream = url(u)
-	if stream:
-		return [{'name':__name__,'quality':'640p','url':stream[0],'surl':u}]
+    streams = url(u)
+    result = []
+    if streams:
+        for stream in streams:
+            result.append({'name': __name__,
+                           'quality': '???',
+                           'url': stream, 'surl': u, 'title': 'rutube stream'})
+    return result
+
+
 def _regex(url):
-	return re.search('rutube\.ru/(video/embed|embed)/(?P<id>[^$]+)',url,re.IGNORECASE | re.DOTALL)
+    return re.search('rutube\.ru/(play/embed|video/embed|embed)/(?P<id>[^$]+)',
+                     url,
+                     re.IGNORECASE | re.DOTALL)
