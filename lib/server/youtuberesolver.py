@@ -389,7 +389,7 @@ decryptor = SignatureExtractor()
 '''
 
 import sys
-import cgi
+from urllib.parse import parse_qs
 import json
 
 class YoutubePlayer(object):
@@ -469,7 +469,7 @@ class YoutubePlayer(object):
             sts = re.search('"sts"\s*:\s*(\d+)', embed_webpage).group().replace('"sts":', '')
             result = util.request(self.urls["video_info"] % (video_id, video_id, sts))
 
-            flashvars = cgi.parse_qs(result)
+            flashvars = parse_qs(result)
             flashvars["url_encoded_fmt_stream_map"] = flashvars["url_encoded_fmt_stream_map"][0]
             flashvars["title"] = flashvars["title"][0]
         else:
@@ -484,7 +484,7 @@ class YoutubePlayer(object):
             video["title"] = flashvars["title"]
 
         for url_desc in flashvars["url_encoded_fmt_stream_map"].split(","):
-            url_desc_map = cgi.parse_qs(url_desc)
+            url_desc_map = parse_qs(url_desc)
             if not ("url" in url_desc_map or "stream" in url_desc_map):
                 continue
 
